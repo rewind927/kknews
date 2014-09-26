@@ -1,0 +1,1 @@
+include ':app', ':jsoup-1.7.3', ':android-support-v4'
