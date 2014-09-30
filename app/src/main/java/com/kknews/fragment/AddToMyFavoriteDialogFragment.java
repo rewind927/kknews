@@ -22,6 +22,7 @@ public class AddToMyFavoriteDialogFragment extends DialogFragment {
 
 	private Button mButtonCancel;
 	private Button mButtonOk;
+	private EditText mTextInputFileName;
 	private DialogClickListener callback;
 
 
@@ -46,8 +47,8 @@ public class AddToMyFavoriteDialogFragment extends DialogFragment {
 		TextView textTitle = (TextView) v.findViewById(R.id.text_title);
 		textTitle.setText(getArguments().getString(Utils.PASS_EDIT_TITLE_KEY));
 
-		EditText textInputFileName = (EditText) v.findViewById(R.id.text_input_file_name);
-		textInputFileName.setText(getArguments().getString(Utils.PASS_EDIT_TEXT_KEY));
+		mTextInputFileName = (EditText) v.findViewById(R.id.text_input_file_name);
+		mTextInputFileName.setText(getArguments().getString(Utils.PASS_EDIT_TEXT_KEY));
 
 		mButtonCancel = (Button) v.findViewById(R.id.button_cancel);
 		mButtonCancel.setOnClickListener(new View.OnClickListener() {
@@ -73,6 +74,10 @@ public class AddToMyFavoriteDialogFragment extends DialogFragment {
 
 	public void setCallBack(DialogClickListener callback){
 		this.callback = callback;
+	}
+
+	public String getFileName(){
+		return mTextInputFileName.getText().toString();
 	}
 
 }

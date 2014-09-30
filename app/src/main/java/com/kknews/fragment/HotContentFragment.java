@@ -1,10 +1,12 @@
 package com.kknews.fragment;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -62,6 +64,8 @@ public class HotContentFragment extends Fragment {
 
 	private boolean mMultiSelectMode = false;
 
+	private String mTitle;
+
 	// data
 	private ArrayList<ContentDataObject> mDataList;
 	//db
@@ -73,7 +77,8 @@ public class HotContentFragment extends Fragment {
 		View view = inflater.inflate(R.layout.layout_hot_content, container, false);
 		TextView textHotTitle = (TextView) view.findViewById(R.id.text_hot_title);
 		Bundle bundle = this.getArguments();
-		textHotTitle.setText(bundle.getString(Utils.PASS_TITLE_KEY, null));
+		mTitle = bundle.getString(Utils.PASS_TITLE_KEY, null);
+		textHotTitle.setText(mTitle);
 
 		mLayoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
 		mButtonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);
@@ -87,12 +92,14 @@ public class HotContentFragment extends Fragment {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				if (mMultiSelectMode) {
-					SparseBooleanArray sparseBooleanArray = mListViewHotContent.getCheckedItemPositions();
-					if (sparseBooleanArray.get(position)) {
-						view.setBackgroundColor(123);
+
+					Integer pos = new Integer(position);
+					if (mAdapterHotEntry.getSelectIds().contains(pos)) {
+						mAdapterHotEntry.getSelectIds().remove(pos);
 					} else {
-						view.setBackgroundColor(456);
+						mAdapterHotEntry.getSelectIds().add(pos);
 					}
+					mAdapterHotEntry.notifyDataSetChanged();
 
 				} else {
 					TextView textDescription = (TextView) view.findViewById(R.id.text_description);
@@ -110,38 +117,11 @@ public class HotContentFragment extends Fragment {
 			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 				if (!mMultiSelectMode) {
 					ViewHolder viewHolder = (ViewHolder) view.getTag();
-					showDialog(viewHolder.textTitle.getText().toString());
+					showDialog(viewHolder.textTitle.getText().toString(), position);
 				}
 				return false;
 			}
 		});
-
-//		mListViewHotContent.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
-//			@Override
-//			public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
-//				Log.w("123","checked:"+checked);
-//			}
-//
-//			@Override
-//			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-//				return false;
-//			}
-//
-//			@Override
-//			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-//				return false;
-//			}
-//
-//			@Override
-//			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-//				return false;
-//			}
-//
-//			@Override
-//			public void onDestroyActionMode(ActionMode mode) {
-//
-//			}
-//		});
 		return view;
 	}
 
@@ -287,6 +267,7 @@ public class HotContentFragment extends Fragment {
 	class HotEntryAdapter extends BaseAdapter {
 
 		private LayoutInflater inflater;
+		private ArrayList<Integer> selectedIds = new ArrayList<Integer>();
 
 		HotEntryAdapter(Context ctx) {
 			inflater = LayoutInflater.from(ctx);
@@ -330,11 +311,20 @@ public class HotContentFragment extends Fragment {
 			holder.textDescription.setText(Html.fromHtml(mDataList.get(i).getDescription()));
 			holder.viewThumb = (ImageView) convertView.findViewById(R.id.view_thumb);
 			holder.position = i;
+
+			if (selectedIds.contains(i)) {
+				holder.textTitle.setTextColor(Color.RED);
+			} else {
+				holder.textTitle.setTextColor(Color.BLACK);
+			}
+
 			new LoadImage(i, holder, mDataList.get(i).getImgUrl()).execute();
 
-			Log.w("123", "mDataList.get(i).getTitle():" + mDataList.get(i).getTitle());
-
 			return convertView;
+		}
+
+		public ArrayList getSelectIds() {
+			return selectedIds;
 		}
 	}
 
@@ -350,12 +340,27 @@ public class HotContentFragment extends Fragment {
 		public void onClick(View v) {
 			switch (v.getId()) {
 				case R.id.button_multi_select_ok:
-					if (mDB != null){
-//						mDB.execSQL();
+					if (mDB != null) {
+						SparseBooleanArray checkItemList = mListViewHotContent.getCheckedItemPositions();
+						int listSize = mListViewHotContent.getCount();
+						for (int i = 0; i < listSize; i++) {
+							if (checkItemList.get(i)) {
+								Log.d(TAG, i + ":check ok");
+								insertContentData(i, mTitle);
+							}
+						}
+						//TODO
+						//add thumbnail path.
+						insertCategoryData(mTitle,"");
 					}
 				case R.id.button_multi_select_cancel:
 					mMultiSelectMode = false;
 					mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
+
+					mListViewHotContent.clearChoices();
+
+					mAdapterHotEntry.getSelectIds().clear();
+					mAdapterHotEntry.notifyDataSetChanged();
 					break;
 			}
 		}
@@ -370,7 +375,7 @@ public class HotContentFragment extends Fragment {
 		}
 	};
 
-	private void showDialog(String title) {
+	private void showDialog(String title, final int position) {
 
 		FragmentTransaction ft = getFragmentManager().beginTransaction();
 		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
@@ -379,8 +384,7 @@ public class HotContentFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		final AddToMyFavoriteDialogFragment newFragment = AddToMyFavoriteDialogFragment.newInstance(getArguments().getString(Utils
-				.PASS_TITLE_KEY, null), title);
+		final AddToMyFavoriteDialogFragment newFragment = AddToMyFavoriteDialogFragment.newInstance(mTitle, title);
 
 		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
 		newFragment.setCallBack(new DialogClickListener() {
@@ -392,8 +396,30 @@ public class HotContentFragment extends Fragment {
 			@Override
 			public void onOkClick() {
 				Toast.makeText(getActivity(), "onclick callback", Toast.LENGTH_SHORT).show();
+				insertContentData(position, newFragment.getFileName());
+				insertCategoryData(newFragment.getFileName(),"");
+
 			}
 		});
+	}
+
+	private void insertCategoryData(String fileName, String thumbUrl) {
+		ContentValues value = new ContentValues();
+		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
+		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbUrl);
+		mDB.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
+	}
+
+	private void insertContentData(int position, String fileName) {
+		ContentDataObject data = mDataList.get(position);
+		ContentValues value = new ContentValues();
+		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
+		value.put(NewsContentDBHelper.COLUMN_CATEGORY, data.getCategory());
+		value.put(NewsContentDBHelper.COLUMN_DATE, data.getDate());
+		value.put(NewsContentDBHelper.COLUMN_DESCRIPTION, data.getDescription());
+		value.put(NewsContentDBHelper.COLUMN_TITLE, data.getTitle());
+		value.put(NewsContentDBHelper.COLUMN_URL, data.getLink());
+		mDB.insert(NewsContentDBHelper.TABLE_CONTENT, null, value);
 	}
 
 	class LoadImage extends AsyncTask<Object, Void, Bitmap> {
