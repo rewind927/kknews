@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
+import com.kknews.callback.DialogClickListener;
 import com.kknews.data.ContentDataObject;
 import com.kknews.database.NewsContentDBHelper;
 import com.kknews.util.Utils;
@@ -381,22 +382,18 @@ public class HotContentFragment extends Fragment {
 		final AddToMyFavoriteDialogFragment newFragment = AddToMyFavoriteDialogFragment.newInstance(getArguments().getString(Utils
 				.PASS_TITLE_KEY, null), title);
 
-		newFragment.setOkClickListener(new View.OnClickListener() {
+		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
+		newFragment.setCallBack(new DialogClickListener() {
 			@Override
-			public void onClick(View v) {
+			public void onCancelClick() {
+				Toast.makeText(getActivity(), "cancel callback", Toast.LENGTH_SHORT).show();
+			}
 
-				//				int size = mListViewHotContent.getCheckedItemCount();
-//				SparseBooleanArray sparseBooleanArray = mListViewHotContent.getCheckedItemPositions();
-//				for (int i =0;i<mListViewHotContent.getCount();i++){
-//					Log.w("123","i:"+i+","+sparseBooleanArray.get(i));
-//				}
-
-				Toast.makeText(getActivity(), "加入成功", Toast.LENGTH_SHORT).show();
-				newFragment.dismiss();
+			@Override
+			public void onOkClick() {
+				Toast.makeText(getActivity(), "onclick callback", Toast.LENGTH_SHORT).show();
 			}
 		});
-
-		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
 	}
 
 	class LoadImage extends AsyncTask<Object, Void, Bitmap> {

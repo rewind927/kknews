@@ -12,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
+import com.kknews.callback.DialogClickListener;
 import com.kknews.util.Utils;
 
 /**
@@ -21,6 +22,7 @@ public class AddToMyFavoriteDialogFragment extends DialogFragment {
 
 	private Button mButtonCancel;
 	private Button mButtonOk;
+	private DialogClickListener callback;
 
 
 	static AddToMyFavoriteDialogFragment newInstance(String editText,String title){
@@ -51,6 +53,7 @@ public class AddToMyFavoriteDialogFragment extends DialogFragment {
 		mButtonCancel.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				callback.onCancelClick();
 				dismiss();
 			}
 		});
@@ -59,17 +62,17 @@ public class AddToMyFavoriteDialogFragment extends DialogFragment {
 		mButtonOk.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				callback.onOkClick();
 				dismiss();
-				Toast.makeText(getActivity(),"加入成功",Toast.LENGTH_SHORT).show();
+				Toast.makeText(getActivity(), "加入成功", Toast.LENGTH_SHORT).show();
 			}
 		});
 
 		return v;
 	}
 
-	public void setOkClickListener(View.OnClickListener callback){
-		mButtonOk.setOnClickListener(callback);
+	public void setCallBack(DialogClickListener callback){
+		this.callback = callback;
 	}
-
 
 }
