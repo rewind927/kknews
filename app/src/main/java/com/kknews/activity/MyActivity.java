@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
 import android.widget.TabHost;
@@ -17,12 +16,6 @@ import com.kknews.fragment.HotFragment;
 import com.kknews.fragment.PersonalFragment;
 import com.kknews.fragment.SettingFragment;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -47,48 +40,9 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 
 	}
 
-//	@Override
-//	public boolean onCreateOptionsMenu(Menu menu) {
-//		// Inflate the menu; this adds items to the action bar if it is present.
-//		getMenuInflater().inflate(R.menu.action_menu, menu);
-//		return false;
-//	}
-//
-//	@Override
-//	public boolean onOptionsItemSelected(MenuItem item) {
-//		// Handle action bar item clicks here. The action bar will
-//		// automatically handle clicks on the Home/Up button, so long
-//		// as you specify a parent activity in AndroidManifest.xml.
-//		int id = item.getItemId();
-//		if (id == R.id.action_add_my_favorite) {
-//			return true;
-//		}
-//		return super.onOptionsItemSelected(item);
-//	}
-
 	@Override
 	public MenuInflater getMenuInflater() {
 		return super.getMenuInflater();
-	}
-
-	private void getXml(String url) {
-		try {
-			Document doc = Jsoup.connect(url).get();
-
-			Elements metaElements = doc.select("item");
-			Log.d("123", "metaElements:" + metaElements.size());
-
-			for (Element el : metaElements) {
-				for (Element subEl : el.children()) {
-					Log.d("123", subEl.tag() + ":" + subEl.text());
-
-				}
-				Log.d("123", "------------------------");
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private class TabInfo {
