@@ -197,6 +197,8 @@ public class PersonalFragment extends Fragment {
 			mDataList = new ArrayList<CategoryObject>();
 		}
 
+		mDataList.clear();
+
 		if (cursor == null) {
 			return;
 		}

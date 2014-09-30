@@ -229,6 +229,8 @@ public class PersonalContentFragment extends Fragment {
 			mDataList = new ArrayList<ContentDataObject>();
 		}
 
+		mDataList.clear();
+
 		if (cursor == null) {
 			return;
 		}
@@ -252,7 +254,6 @@ public class PersonalContentFragment extends Fragment {
 	}
 
 	private Cursor getDataCursorFromDB(){
-		Log.d(TAG,"select ..........:"+mTitle);
 		Cursor cursor = mDB.rawQuery("SELECT * FROM "+NewsContentDBHelper.TABLE_CONTENT+" WHERE "+NewsContentDBHelper.COLUMN_FILE +" = '"+mTitle+"'", null);
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
