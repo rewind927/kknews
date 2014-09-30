@@ -29,6 +29,8 @@ public class NewsContentDBHelper extends SQLiteOpenHelper {
 			"" + COLUMN_CATEGORY + " text );";
 	private static final String SQL_CREATE_CATEGORY_TABLE = "CREATE TABLE " + TABLE_CATEGORY + "(" + COLUMN_ID + " integer primary key " +
 			"autoincrement, " + COLUMN_FILE + " text UNIQUE, " + COLUMN_THUMBNAIL + " text );";
+	public static final String SQL_SELECT_CATEGORY_DATA = "SELECT * FROM "+TABLE_CATEGORY+";";
+
 	private static final String SQL_DROP_CONTENT_TABLE = "DROP TABLE IF EXISTS " + TABLE_CONTENT;
 	private static final String SQL_DROP_CATEGORY_TABLE = "DROP TABLE IF EXISTS " + TABLE_CATEGORY;
 

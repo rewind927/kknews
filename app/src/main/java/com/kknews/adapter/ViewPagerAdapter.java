@@ -31,4 +31,8 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
 		return fragments.size();
 	}
 
+	public List getFragments(){
+		return fragments;
+	}
+
 }

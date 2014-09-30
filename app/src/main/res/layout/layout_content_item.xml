@@ -28,6 +28,7 @@
 				android:textSize="20sp"
 				android:layout_toRightOf="@+id/view_thumb"
 				android:layout_marginLeft="10dp"
+				android:layout_marginRight="10dp"
 				android:layout_centerVertical="true"
 				android:text="test title"/>
 	</RelativeLayout>

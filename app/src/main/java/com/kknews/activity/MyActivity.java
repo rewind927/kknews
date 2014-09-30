@@ -22,6 +22,10 @@ import java.util.Vector;
 
 public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeListener, ViewPager.OnPageChangeListener {
 
+	private static final int HOT_FRAGMENT_TAG = 0;
+	private static final int PERSONAL_FRAGMENT_TAG = 1;
+	private static final int SETTING_FRAGMENT_TAG = 2;
+
 	private TabHost mTabHost;
 	private ViewPager mViewPager;
 	private HashMap<String, TabInfo> mapTabInfo = new HashMap<String, TabInfo>();
@@ -127,6 +131,10 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 	public void onTabChanged(String tag) {
 		int pos = this.mTabHost.getCurrentTab();
 		this.mViewPager.setCurrentItem(pos);
+
+		if (pos == PERSONAL_FRAGMENT_TAG) {
+			((PersonalFragment) mAdapter.getFragments().get(pos)).updateData();
+		}
 	}
 
 }
