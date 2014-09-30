@@ -2,22 +2,37 @@ package com.kknews.fragment;
 
 import android.app.Activity;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
 import com.kknews.data.ContentDataObject;
-import com.kknews.util.CustomExpandCard;
+import com.kknews.database.NewsContentDBHelper;
 import com.kknews.util.Utils;
 
 import org.jsoup.Jsoup;
@@ -26,12 +41,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
-
-import it.gmariotti.cardslib.library.internal.Card;
-import it.gmariotti.cardslib.library.internal.CardArrayAdapter;
-import it.gmariotti.cardslib.library.internal.CardHeader;
-import it.gmariotti.cardslib.library.view.CardListView;
 
 /**
  * Created by ryanwang on 2014/9/25.
@@ -40,18 +52,95 @@ public class HotContentFragment extends Fragment {
 
 	public final static String TAG = "HotContentFragment";
 
+	//view
+	private LinearLayout mLayoutMultiSelectButtonGroup;
+	private Button mButtonMultiSelectOk;
+	private Button mButtonMultiSelectCancel;
 	private ListView mListViewHotContent;
 	private HotEntryAdapter mAdapterHotEntry;
 
+	private boolean mMultiSelectMode = false;
+
+	// data
 	private ArrayList<ContentDataObject> mDataList;
+	//db
+	private NewsContentDBHelper mDbHelper;
+	private SQLiteDatabase mDB;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.layout_hot_content, container, false);
-		TextView t = (TextView) view.findViewById(R.id.text_hot_title);
+		TextView textHotTitle = (TextView) view.findViewById(R.id.text_hot_title);
 		Bundle bundle = this.getArguments();
-		t.setText(bundle.getString(Utils.PASS_TITLE_KEY,null));
+		textHotTitle.setText(bundle.getString(Utils.PASS_TITLE_KEY, null));
+
+		mLayoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
+		mButtonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);
+		mButtonMultiSelectCancel = (Button) view.findViewById(R.id.button_multi_select_cancel);
+		mButtonMultiSelectOk.setOnClickListener(mClickMultiSelectListener);
+		mButtonMultiSelectCancel.setOnClickListener(mClickMultiSelectListener);
+
 		mListViewHotContent = (ListView) view.findViewById(R.id.listview_hot_content);
+		mListViewHotContent.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				if (mMultiSelectMode) {
+					SparseBooleanArray sparseBooleanArray = mListViewHotContent.getCheckedItemPositions();
+					if (sparseBooleanArray.get(position)) {
+						view.setBackgroundColor(123);
+					} else {
+						view.setBackgroundColor(456);
+					}
+
+				} else {
+					TextView textDescription = (TextView) view.findViewById(R.id.text_description);
+					if (textDescription.getVisibility() == View.GONE) {
+						textDescription.setVisibility(View.VISIBLE);
+					} else {
+						textDescription.setVisibility(View.GONE);
+					}
+				}
+
+			}
+		});
+		mListViewHotContent.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+			@Override
+			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+				if (!mMultiSelectMode) {
+					ViewHolder viewHolder = (ViewHolder) view.getTag();
+					showDialog(viewHolder.textTitle.getText().toString());
+				}
+				return false;
+			}
+		});
+
+//		mListViewHotContent.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+//			@Override
+//			public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+//				Log.w("123","checked:"+checked);
+//			}
+//
+//			@Override
+//			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+//				return false;
+//			}
+//
+//			@Override
+//			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+//				return false;
+//			}
+//
+//			@Override
+//			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+//				return false;
+//			}
+//
+//			@Override
+//			public void onDestroyActionMode(ActionMode mode) {
+//
+//			}
+//		});
 		return view;
 	}
 
@@ -71,12 +160,29 @@ public class HotContentFragment extends Fragment {
 	}
 
 	@Override
+	public void onDestroy() {
+		if (mDbHelper != null) {
+			mDbHelper.close();
+		}
+		if (mDB != null) {
+			mDB.close();
+		}
+
+		super.onDestroy();
+	}
+
+	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+
+		setHasOptionsMenu(true);
+
+		mDbHelper = new NewsContentDBHelper(getActivity());
+		mDB = mDbHelper.getWritableDatabase();
 
 		Bundle bundle = this.getArguments();
 		final String dataUrl = bundle.getString(Utils.PASS_URL_KEY, null);
@@ -89,6 +195,39 @@ public class HotContentFragment extends Fragment {
 		}.start();
 
 		super.onCreate(savedInstanceState);
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		inflater.inflate(R.menu.action_menu, menu);
+		if (menu != null) {
+			menu.findItem(R.id.action_add_my_favorite).setVisible(true);
+
+			menu.findItem(R.id.action_add_file).setVisible(false);
+			menu.findItem(R.id.action_delete_file).setVisible(false);
+		}
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.action_add_my_favorite:
+				Log.d(TAG, "action_add_my_favorite");
+				mListViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+				mMultiSelectMode = true;
+				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
+
+//				int size = mListViewHotContent.getCheckedItemCount();
+//				SparseBooleanArray sparseBooleanArray = mListViewHotContent.getCheckedItemPositions();
+//				for (int i =0;i<mListViewHotContent.getCount();i++){
+//					Log.w("123","i:"+i+","+sparseBooleanArray.get(i));
+//				}
+//				Log.w("123","size:"+size);
+				break;
+			default:
+				break;
+		}
+		return true;
 	}
 
 	private void getData(String url) {
@@ -125,11 +264,13 @@ public class HotContentFragment extends Fragment {
 						Elements elements = docDescription.select("img");
 						data.setImgUrl(elements.get(0).attr("src"));
 						elements = docDescription.select(" 文章內容 ");
-						Log.d(TAG,"elements.get(0).text():"+elements.size()+",");
-						data.setDescription(subEl.text());
+						Log.d(TAG, "elements.get(0).text():" + elements.size() + ",");
+						String tempString = subEl.text();
+						String skipString = "</a>";
+						tempString = tempString.substring(tempString.indexOf(skipString) + skipString.length());
+						data.setDescription(tempString);
 					}
 					Log.d(TAG, subEl.tag() + ":" + subEl.text());
-
 				}
 				dataList.add(data);
 				Log.d(TAG, "------------------------");
@@ -175,13 +316,21 @@ public class HotContentFragment extends Fragment {
 			if (convertView == null) {
 				holder = new ViewHolder();
 				convertView = inflater.inflate(R.layout.layout_content_item, null);
+				holder.viewThumb = (ImageView) convertView.findViewById(R.id.view_thumb);
 				holder.textTitle = (TextView) convertView.findViewById(R.id.text_title);
+				holder.textDescription = (TextView) convertView.findViewById(R.id.text_description);
 				convertView.setTag(holder);
 			} else {
 				holder = (ViewHolder) convertView.getTag();
 			}
 
 			holder.textTitle.setText(mDataList.get(i).getTitle());
+			holder.textDescription.setMovementMethod(LinkMovementMethod.getInstance());
+			holder.textDescription.setText(Html.fromHtml(mDataList.get(i).getDescription()));
+			holder.viewThumb = (ImageView) convertView.findViewById(R.id.view_thumb);
+			holder.position = i;
+			new LoadImage(i, holder, mDataList.get(i).getImgUrl()).execute();
+
 			Log.w("123", "mDataList.get(i).getTitle():" + mDataList.get(i).getTitle());
 
 			return convertView;
@@ -190,82 +339,113 @@ public class HotContentFragment extends Fragment {
 
 	class ViewHolder {
 		TextView textTitle;
+		ImageView viewThumb;
+		TextView textDescription;
+		int position;
 	}
+
+	private View.OnClickListener mClickMultiSelectListener = new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			switch (v.getId()) {
+				case R.id.button_multi_select_ok:
+					if (mDB != null){
+//						mDB.execSQL();
+					}
+				case R.id.button_multi_select_cancel:
+					mMultiSelectMode = false;
+					mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
+					break;
+			}
+		}
+	};
 
 	Handler mHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-//			mAdapterHotEntry = new HotEntryAdapter(getActivity());
-//			mListViewHotContent.setAdapter(mAdapterHotEntry);
-			initCards();
+			mAdapterHotEntry = new HotEntryAdapter(getActivity());
+			mListViewHotContent.setAdapter(mAdapterHotEntry);
+
 		}
 	};
 
-	private void initCards() {
+	private void showDialog(String title) {
 
-		//Init an array of Cards
-		ArrayList<Card> cards = new ArrayList<Card>();
-		for (int i=0;i<mDataList.size();i++){
-			Card card = init_standard_header_with_expandcollapse_button_custom_area(mDataList.get(i).getTitle(),i);
-			cards.add(card);
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+		if (prev != null) {
+			ft.remove(prev);
 		}
+		ft.addToBackStack(null);
 
-		CardArrayAdapter mCardArrayAdapter = new CardArrayAdapter(getActivity(),cards);
+		final AddToMyFavoriteDialogFragment newFragment = AddToMyFavoriteDialogFragment.newInstance(getArguments().getString(Utils
+				.PASS_TITLE_KEY, null), title);
 
-		CardListView listView = (CardListView) getActivity().findViewById(R.id.carddemo_list_expand);
-		if (listView!=null){
-			listView.setAdapter(mCardArrayAdapter);
-		}
-	}
-
-
-	/**
-	 * This method builds a standard header with a custom expand/collpase
-	 */
-	private Card init_standard_header_with_expandcollapse_button_custom_area(String titleHeader,int i) {
-
-		//Create a Card
-		Card card = new Card(getActivity());
-
-		//Create a CardHeader
-		CardHeader header = new CardHeader(getActivity());
-
-		//Set the header title
-		header.setTitle(titleHeader);
-
-		//Set visible the expand/collapse button
-		header.setButtonExpandVisible(true);
-
-		//Add Header to card
-		card.addCardHeader(header);
-
-		//This provides a simple (and useless) expand area
-		CustomExpandCard expand = new CustomExpandCard(getActivity(),i);
-		//Add Expand Area to Card
-		card.addCardExpand(expand);
-
-		//Just an example to expand a card
-		if (i==2 || i==7 || i==9)
-			card.setExpanded(true);
-
-		//Swipe
-		card.setSwipeable(true);
-
-		//Animator listener
-		card.setOnExpandAnimatorEndListener(new Card.OnExpandAnimatorEndListener() {
+		newFragment.setOkClickListener(new View.OnClickListener() {
 			@Override
-			public void onExpandEnd(Card card) {
-				Toast.makeText(getActivity(), "Expand " + card.getCardHeader().getTitle(), Toast.LENGTH_SHORT).show();
+			public void onClick(View v) {
+
+				//				int size = mListViewHotContent.getCheckedItemCount();
+//				SparseBooleanArray sparseBooleanArray = mListViewHotContent.getCheckedItemPositions();
+//				for (int i =0;i<mListViewHotContent.getCount();i++){
+//					Log.w("123","i:"+i+","+sparseBooleanArray.get(i));
+//				}
+
+				Toast.makeText(getActivity(), "加入成功", Toast.LENGTH_SHORT).show();
+				newFragment.dismiss();
 			}
 		});
 
-		card.setOnCollapseAnimatorEndListener(new Card.OnCollapseAnimatorEndListener() {
-			@Override
-			public void onCollapseEnd(Card card) {
-				Toast.makeText(getActivity(),"Collpase " +card.getCardHeader().getTitle(),Toast.LENGTH_SHORT).show();
-			}
-		});
-
-		return card;
+		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
 	}
+
+	class LoadImage extends AsyncTask<Object, Void, Bitmap> {
+
+		private String mPath;
+		private int mPosition;
+		private ViewHolder mHolder;
+
+		public LoadImage(int position, ViewHolder holder, String path) {
+			this.mPosition = position;
+			this.mHolder = holder;
+			this.mPath = path;
+		}
+
+		@Override
+		protected Bitmap doInBackground(Object... params) {
+			Bitmap bitmap = null;
+//			File file = new File(
+//					Environment.getExternalStorageDirectory().getAbsolutePath() + path);
+//
+//			if(file.exists()){
+//				bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+//			}
+
+			URL imageURL = null;
+			try {
+				imageURL = new URL(mPath);
+				bitmap = BitmapFactory.decodeStream(imageURL.openStream());
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			return bitmap;
+		}
+
+		@Override
+		protected void onPostExecute(Bitmap result) {
+			if (mHolder.position == mPosition) {
+				if (result != null && mHolder.viewThumb != null) {
+					mHolder.viewThumb.setVisibility(View.VISIBLE);
+					mHolder.viewThumb.setImageBitmap(result);
+				} else {
+					mHolder.viewThumb.setVisibility(View.GONE);
+				}
+			}
+		}
+
+	}
+
 }

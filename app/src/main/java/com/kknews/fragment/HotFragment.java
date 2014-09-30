@@ -89,6 +89,12 @@ public class HotFragment extends Fragment {
 	}
 
 	@Override
+	public void onCreate(Bundle savedInstanceState) {
+
+		super.onCreate(savedInstanceState);
+	}
+
+	@Override
 	public void onStart() {
 		super.onStart();
 	}
@@ -107,6 +113,7 @@ public class HotFragment extends Fragment {
 	public void onDestroy() {
 		super.onDestroy();
 	}
+
 
 	interface ParseHotEntryCallback {
 		void onFinish(ArrayList<ListDataObject> dataList);

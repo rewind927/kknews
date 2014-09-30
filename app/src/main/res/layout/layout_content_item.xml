@@ -1,15 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-			  android:orientation="vertical"
-			  android:layout_width="match_parent"
-			  android:layout_height="match_parent">
-	<TextView
-			android:id="@+id/text_title"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:textSize="20sp"
-			android:layout_marginLeft="10dp"
-			android:text="@string/hot"/>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+				android:orientation="vertical"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:descendantFocusability="blocksDescendants">
 
-</LinearLayout>
+	<RelativeLayout
+			android:id="@+id/rl_title_area"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+
+		<ImageView
+				android:id="@+id/view_thumb"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:layout_marginLeft="5dp"
+				android:layout_marginRight="5dp"
+				android:layout_marginTop="5dp"
+				android:layout_marginBottom="5dp"
+				android:src="@drawable/ic_launcher"/>
+
+		<TextView
+				android:id="@+id/text_title"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textSize="20sp"
+				android:layout_toRightOf="@+id/view_thumb"
+				android:layout_marginLeft="10dp"
+				android:layout_centerVertical="true"
+				android:text="test title"/>
+	</RelativeLayout>
+
+	<RelativeLayout
+			android:id="@+id/rl_content_area"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_below="@+id/rl_title_area"
+			android:background="@color/card_foreground_activated">
+		<TextView
+				android:id="@+id/text_description"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="10dp"
+				android:layout_marginRight="10dp"
+				android:text="@string/hello_world"
+				android:visibility="gone"
+				android:textSize="18sp"/>
+	</RelativeLayout>
+</RelativeLayout>

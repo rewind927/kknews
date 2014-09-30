@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  android:orientation="vertical"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent"
+			  android:background="#ffffff">
+
+	<TextView
+			android:id="@+id/text_title"
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			android:text="@string/hot"
+			android:textSize="20sp"
+			android:layout_gravity="center_horizontal"
+			android:layout_marginLeft="10dp"
+			android:layout_marginRight="10dp"
+			android:layout_marginBottom="10dp"/>
+
+	<TextView
+			android:id="@+id/text_input_title"
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			android:text="@string/add_to_favorite"
+			android:textSize="20sp"
+			android:layout_marginLeft="10dp"
+			android:layout_marginRight="10dp"
+			/>
+
+	<EditText
+			android:id="@+id/text_input_file_name"
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			android:textSize="20sp"
+			android:layout_marginLeft="10dp"
+			android:layout_marginRight="10dp"
+			/>
+
+	<LinearLayout
+			android:id="@+id/ll_buttom_group"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="5dp">
+
+		<Button
+				android:id="@+id/button_cancel"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="5dp"
+				android:layout_marginRight="5dp"
+				android:layout_weight="1"
+				android:text="@string/cancel"
+				android:textColor="@android:color/white"
+				android:background="@android:color/holo_blue_dark"/>
+
+		<Button
+				android:id="@+id/button_ok"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="5dp"
+				android:layout_marginRight="5dp"
+				android:layout_weight="1"
+				android:text="@string/add"
+				android:textColor="@android:color/white"
+				android:background="@android:color/holo_blue_dark"/>
+	</LinearLayout>
+
+
+</LinearLayout>

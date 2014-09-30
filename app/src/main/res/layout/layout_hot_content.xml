@@ -18,14 +18,42 @@
 			android:id="@+id/listview_hot_content"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
+			android:layout_above="@+id/ll_multi_select_button_group"
 			android:layout_below="@+id/text_hot_title"
-			android:visibility="gone"/>
+			android:visibility="visible"/>
 
 
-	<it.gmariotti.cardslib.library.view.CardListView
+	<LinearLayout
+			android:id="@+id/ll_multi_select_button_group"
+			android:orientation="horizontal"
 			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:layout_below="@+id/text_hot_title"
-			android:id="@+id/carddemo_list_expand"/>
+			android:layout_height="wrap_content"
+			android:layout_marginTop="5dp"
+			android:layout_marginBottom="5dp"
+			android:layout_alignParentBottom="true"
+			android:visibility="gone">
+
+		<Button
+				android:id="@+id/button_multi_select_cancel"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="5dp"
+				android:layout_marginRight="5dp"
+				android:layout_weight="1"
+				android:text="@string/cancel"
+				android:textColor="@android:color/white"
+				android:background="@android:color/holo_blue_dark"/>
+
+		<Button
+				android:id="@+id/button_multi_select_ok"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="5dp"
+				android:layout_marginRight="5dp"
+				android:layout_weight="1"
+				android:text="@string/add"
+				android:textColor="@android:color/white"
+				android:background="@android:color/holo_blue_dark"/>
+	</LinearLayout>
 
 </RelativeLayout>

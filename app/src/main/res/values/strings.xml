@@ -9,4 +9,17 @@
 	<string name="personal">個人精選</string>
 	<string name="setting">設定</string>
 
+	<string name="setting_auto_refresh">自動更新</string>
+	<string name="setting_auto_refresh_description">開啓自動更新資訊</string>
+	<string name="setting_auto_refresh_frequency">自動更新頻率</string>
+
+	<string name="action_add_file">新增資料夾</string>
+	<string name="action_delete_file">刪除資料夾</string>
+	<string name="action_add_my_favorite">加到我的最愛</string>
+
+	<string name="add_to_favorite">加入個人精選</string>
+
+	<string name="cancel">取消</string>
+	<string name="add">加入</string>
+
 </resources>

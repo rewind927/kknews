@@ -3,6 +3,8 @@ package com.kknews.fragment;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -19,5 +21,24 @@ public class PersonalFragment extends Fragment {
 		TextView t = (TextView)view.findViewById(R.id.text);
 		t.setText("personal");
 		return view;
+	}
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+
+		setHasOptionsMenu(true);
+
+		super.onCreate(savedInstanceState);
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		inflater.inflate(R.menu.action_menu, menu);
+		if (menu != null) {
+			menu.findItem(R.id.action_add_my_favorite).setVisible(false);
+
+			menu.findItem(R.id.action_add_file).setVisible(true);
+			menu.findItem(R.id.action_delete_file).setVisible(true);
+		}
 	}
 }

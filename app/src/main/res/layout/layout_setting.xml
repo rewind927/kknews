@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+				android:orientation="vertical"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:background="#ffffff">
+
+	<TextView
+			android:id="@+id/text_title"
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			android:text="@string/setting"
+			android:textSize="40sp"
+			android:layout_marginLeft="5dp"
+			android:layout_marginBottom="10dp"/>
+
+	<View
+			android:id="@+id/view_divide_line"
+			android:layout_width="fill_parent"
+			android:layout_height="5dp"
+			android:background="@android:color/holo_blue_dark"
+			android:layout_below="@+id/text_title"/>
+
+
+	<TextView
+			android:id="@+id/text_title_auto_refresh"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="10dp"
+			android:layout_marginRight="10dp"
+			android:layout_marginTop="10dp"
+			android:text="@string/setting_auto_refresh"
+			android:layout_below="@+id/view_divide_line"
+			android:textSize="25sp"/>
+	<TextView
+			android:id="@+id/text_description_auto_refresh"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="10dp"
+			android:layout_marginRight="10dp"
+			android:text="@string/setting_auto_refresh"
+			android:textSize="20sp"
+			android:textColor="@android:color/darker_gray"
+			android:layout_below="@+id/text_title_auto_refresh"/>
+	<CheckBox
+			android:id="@+id/check_box_auto_refresh"
+			android:layout_height="wrap_content"
+			android:layout_width="wrap_content"
+			android:layout_alignParentRight="true"
+			android:layout_below="@+id/text_title_auto_refresh"
+			/>
+
+	<TextView
+			android:id="@+id/text_title_auto_refresh_frequency"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="10dp"
+			android:layout_marginRight="10dp"
+			android:layout_marginTop="10dp"
+			android:text="@string/setting_auto_refresh_frequency"
+			android:layout_below="@+id/text_description_auto_refresh"
+			android:textSize="25sp"/>
+
+	<Spinner
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/spinner"
+			android:layout_below="@+id/text_title_auto_refresh_frequency"
+			android:layout_alignLeft="@+id/text_title_auto_refresh_frequency"
+			android:layout_alignStart="@+id/text_title_auto_refresh_frequency"/>
+
+</RelativeLayout>

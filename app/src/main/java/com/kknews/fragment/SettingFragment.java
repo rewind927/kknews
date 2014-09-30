@@ -15,9 +15,9 @@ import com.example.ryanwang.helloworld.R;
 public class SettingFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.fragment_collection_object, container, false);
-		TextView t = (TextView)view.findViewById(R.id.text);
-		t.setText("setting");
+		View view = inflater.inflate(R.layout.layout_setting, container, false);
+		TextView textTitle = (TextView)view.findViewById(R.id.text_title);
+		textTitle.setText("setting");
 		return view;
 	}
 }
