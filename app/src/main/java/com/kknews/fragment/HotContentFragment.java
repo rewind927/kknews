@@ -30,7 +30,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
 import com.kknews.callback.DialogClickListener;
@@ -238,6 +237,8 @@ public class HotContentFragment extends Fragment {
 						Document docDescription = Jsoup.parse(html);
 						Elements elements = docDescription.select("img");
 						data.setImgUrl(elements.get(0).attr("src"));
+						//TODO download high resolution picture
+						//data.setImgUrl(elements.get(0).attr("src").replaceAll("140x140","200x200"));
 						elements = docDescription.select(" 文章內容 ");
 						Log.d(TAG, "elements.get(0).text():" + elements.size() + ",");
 						String tempString = subEl.text();
@@ -336,14 +337,16 @@ public class HotContentFragment extends Fragment {
 					if (mDB != null) {
 						SparseBooleanArray checkItemList = mListViewHotContent.getCheckedItemPositions();
 						int listSize = mListViewHotContent.getCount();
+						int lastCheckPosition = 0;
 						for (int i = 0; i < listSize; i++) {
 							if (checkItemList.get(i)) {
+								lastCheckPosition = i;
 								Log.d(TAG, i + ":check ok");
 								insertContentData(i, mTitle);
 							}
 						}
 
-						insertCategoryData(mTitle, Utils.encodeBase64(mDataList.get(0).getImgUrl()));
+						insertCategoryData(mTitle, Utils.encodeBase64(mDataList.get(lastCheckPosition).getImgUrl()));
 					}
 				case R.id.button_multi_select_cancel:
 					mMultiSelectMode = false;
@@ -382,12 +385,11 @@ public class HotContentFragment extends Fragment {
 		newFragment.setCallBack(new DialogClickListener() {
 			@Override
 			public void onCancelClick() {
-				Toast.makeText(getActivity(), "cancel callback", Toast.LENGTH_SHORT).show();
+
 			}
 
 			@Override
 			public void onOkClick() {
-				Toast.makeText(getActivity(), "onclick callback", Toast.LENGTH_SHORT).show();
 				insertContentData(position, newFragment.getFileName());
 				insertCategoryData(newFragment.getFileName(), Utils.encodeBase64(mDataList.get(position).getImgUrl()));
 
@@ -442,11 +444,11 @@ public class HotContentFragment extends Fragment {
 				return bitmap;
 			}
 
-			URL imageURL = null;
+			URL imageURL;
 			try {
 				imageURL = new URL(mPath);
 				bitmap = BitmapFactory.decodeStream(imageURL.openStream());
-				Utils.saveImageToInternal(getActivity(),bitmap,mFileName);
+				Utils.saveImageToInternal(getActivity(), bitmap, mFileName);
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			} catch (IOException e) {

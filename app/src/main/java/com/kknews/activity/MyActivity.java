@@ -137,4 +137,10 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 		}
 	}
 
+	public void setTabHostVisible(int visible) {
+		if (mTabHost != null) {
+			mTabHost.getTabWidget().setVisibility(visible);
+		}
+	}
+
 }

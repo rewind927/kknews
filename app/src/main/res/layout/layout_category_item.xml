@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  xmlns:app="http://schemas.android.com/apk/res-auto"
 			  android:layout_width="wrap_content"
 			  android:layout_height="wrap_content"
 			  android:layout_marginTop="5dp"
@@ -13,7 +14,11 @@
 			android:id="@+id/image_thumb"
 			android:layout_width="100dp"
 			android:layout_height="100dp"
-			android:gravity="center">
+			android:gravity="center"
+			app:shadow="true"
+			app:border_color="#EEEEEE"
+			app:border="true"
+			app:border_width="2dp">
 	</com.pkmmte.view.CircularImageView>
 
 	<TextView
