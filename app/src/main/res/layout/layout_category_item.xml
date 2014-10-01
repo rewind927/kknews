@@ -9,12 +9,12 @@
 			  android:focusable="false"
 			  android:focusableInTouchMode="false">
 
-	<ImageView
+	<com.pkmmte.view.CircularImageView
 			android:id="@+id/image_thumb"
 			android:layout_width="100dp"
 			android:layout_height="100dp"
-			android:background="@drawable/ic_launcher">
-	</ImageView>
+			android:gravity="center">
+	</com.pkmmte.view.CircularImageView>
 
 	<TextView
 			android:id="@+id/text_category_name"

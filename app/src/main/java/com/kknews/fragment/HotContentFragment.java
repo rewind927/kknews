@@ -43,6 +43,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -197,13 +198,6 @@ public class HotContentFragment extends Fragment {
 				mListViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 				mMultiSelectMode = true;
 				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
-
-//				int size = mListViewHotContent.getCheckedItemCount();
-//				SparseBooleanArray sparseBooleanArray = mListViewHotContent.getCheckedItemPositions();
-//				for (int i =0;i<mListViewHotContent.getCount();i++){
-//					Log.w("123","i:"+i+","+sparseBooleanArray.get(i));
-//				}
-//				Log.w("123","size:"+size);
 				break;
 			default:
 				break;
@@ -309,7 +303,6 @@ public class HotContentFragment extends Fragment {
 			holder.textTitle.setText(mDataList.get(i).getTitle());
 			holder.textDescription.setMovementMethod(LinkMovementMethod.getInstance());
 			holder.textDescription.setText(Html.fromHtml(mDataList.get(i).getDescription()));
-			holder.viewThumb = (ImageView) convertView.findViewById(R.id.view_thumb);
 			holder.position = i;
 
 			if (selectedIds.contains(i)) {
@@ -349,9 +342,8 @@ public class HotContentFragment extends Fragment {
 								insertContentData(i, mTitle);
 							}
 						}
-						//TODO
-						//add thumbnail path.
-						insertCategoryData(mTitle,"");
+
+						insertCategoryData(mTitle, Utils.encodeBase64(mDataList.get(0).getImgUrl()));
 					}
 				case R.id.button_multi_select_cancel:
 					mMultiSelectMode = false;
@@ -397,16 +389,16 @@ public class HotContentFragment extends Fragment {
 			public void onOkClick() {
 				Toast.makeText(getActivity(), "onclick callback", Toast.LENGTH_SHORT).show();
 				insertContentData(position, newFragment.getFileName());
-				insertCategoryData(newFragment.getFileName(),"");
+				insertCategoryData(newFragment.getFileName(), Utils.encodeBase64(mDataList.get(position).getImgUrl()));
 
 			}
 		});
 	}
 
-	private void insertCategoryData(String fileName, String thumbUrl) {
+	private void insertCategoryData(String fileName, String thumbFileName) {
 		ContentValues value = new ContentValues();
 		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
-		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbUrl);
+		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbFileName);
 		mDB.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
 	}
 
@@ -419,6 +411,7 @@ public class HotContentFragment extends Fragment {
 		value.put(NewsContentDBHelper.COLUMN_DESCRIPTION, data.getDescription());
 		value.put(NewsContentDBHelper.COLUMN_TITLE, data.getTitle());
 		value.put(NewsContentDBHelper.COLUMN_URL, data.getLink());
+		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, Utils.encodeBase64(data.getImgUrl()));
 		mDB.insert(NewsContentDBHelper.TABLE_CONTENT, null, value);
 	}
 
@@ -427,27 +420,33 @@ public class HotContentFragment extends Fragment {
 		private String mPath;
 		private int mPosition;
 		private ViewHolder mHolder;
+		private String mFileName;
 
 		public LoadImage(int position, ViewHolder holder, String path) {
 			this.mPosition = position;
 			this.mHolder = holder;
 			this.mPath = path;
+			this.mFileName = Utils.encodeBase64(mPath);
 		}
 
 		@Override
 		protected Bitmap doInBackground(Object... params) {
 			Bitmap bitmap = null;
-//			File file = new File(
-//					Environment.getExternalStorageDirectory().getAbsolutePath() + path);
-//
-//			if(file.exists()){
-//				bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-//			}
+
+			File file = new File(getActivity().getFilesDir(), mFileName);
+
+			Log.d(TAG, "file:" + file.getAbsolutePath());
+
+			if (file.exists()) {
+				bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+				return bitmap;
+			}
 
 			URL imageURL = null;
 			try {
 				imageURL = new URL(mPath);
 				bitmap = BitmapFactory.decodeStream(imageURL.openStream());
+				Utils.saveImageToInternal(getActivity(),bitmap,mFileName);
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			} catch (IOException e) {

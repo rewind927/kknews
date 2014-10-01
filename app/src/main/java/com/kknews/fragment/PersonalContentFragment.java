@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -197,11 +199,21 @@ public class PersonalContentFragment extends Fragment {
 				holder = (ViewHolder) convertView.getTag();
 			}
 
-			holder.textTitle.setText(mDataList.get(i).getTitle());
-			holder.textDescription.setMovementMethod(LinkMovementMethod.getInstance());
-			holder.textDescription.setText(Html.fromHtml(mDataList.get(i).getDescription()));
-			holder.viewThumb = (ImageView) convertView.findViewById(R.id.view_thumb);
+			if (mDataList != null){
+				holder.textTitle.setText(mDataList.get(i).getTitle());
+				holder.textDescription.setMovementMethod(LinkMovementMethod.getInstance());
+				holder.textDescription.setText(Html.fromHtml(mDataList.get(i).getDescription()));
+				Bitmap bitmap = Utils.getBitmapFromInternal(getActivity(), mDataList.get(i).getImgUrl());
+				if (bitmap != null){
+					holder.viewThumb.setImageBitmap(bitmap);
+				}else {
+					holder.viewThumb.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.ic_launcher));
+				}
+			}
+
 			holder.position = i;
+
+
 
 			if (selectedIds.contains(i)) {
 				holder.textTitle.setTextColor(Color.RED);

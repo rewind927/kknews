@@ -16,7 +16,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +23,7 @@ import com.example.ryanwang.helloworld.R;
 import com.kknews.data.CategoryObject;
 import com.kknews.database.NewsContentDBHelper;
 import com.kknews.util.Utils;
+import com.pkmmte.view.CircularImageView;
 
 import java.util.ArrayList;
 
@@ -47,7 +47,7 @@ public class PersonalFragment extends Fragment {
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.d(TAG,"onCreateView");
+		Log.d(TAG, "onCreateView");
 		View view = inflater.inflate(R.layout.layout_personal, container, false);
 		mGridViewShowCategory = (GridView) view.findViewById(R.id.gridview_show_category);
 		mCateGoryAdapter = new CategoryAdapter(getActivity());
@@ -55,16 +55,16 @@ public class PersonalFragment extends Fragment {
 		mGridViewShowCategory.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				Log.d(TAG,"press:"+position);
-				Toast.makeText(getActivity(),"position:"+position,Toast.LENGTH_SHORT).show();
+				Log.d(TAG, "press:" + position);
+				Toast.makeText(getActivity(), "position:" + position, Toast.LENGTH_SHORT).show();
 
 				FragmentManager fragmentManager = getFragmentManager();
 				FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 				fragmentTransaction.addToBackStack(null);
 				PersonalContentFragment fragment = new PersonalContentFragment();
 				Bundle bundle = new Bundle();
-				Log.d(TAG,"mDataList.get(position).getCategory():"+mDataList.get(position).getCategory());
-				bundle.putString(Utils.PASS_TITLE_KEY,mDataList.get(position).getCategory());
+				Log.d(TAG, "mDataList.get(position).getCategory():" + mDataList.get(position).getCategory());
+				bundle.putString(Utils.PASS_TITLE_KEY, mDataList.get(position).getCategory());
 				fragment.setArguments(bundle);
 				fragmentTransaction.add(R.id.rl_view, fragment);
 				fragmentTransaction.commit();
@@ -87,7 +87,7 @@ public class PersonalFragment extends Fragment {
 
 	@Override
 	public void onStart() {
-		Log.d(TAG,"onStart()");
+		Log.d(TAG, "onStart()");
 		super.onStart();
 
 		parseData(getCategoryCursorFromDB());
@@ -96,7 +96,7 @@ public class PersonalFragment extends Fragment {
 
 	@Override
 	public void onResume() {
-		Log.d(TAG,"onResume()");
+		Log.d(TAG, "onResume()");
 		super.onResume();
 	}
 
@@ -150,12 +150,13 @@ public class PersonalFragment extends Fragment {
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			ViewHolder holder = null;
+			ViewHolder holder;
 
 			if (convertView == null) {
 				holder = new ViewHolder();
 				convertView = inflater.inflate(R.layout.layout_category_item, null);
 				holder.textTitle = (TextView) convertView.findViewById(R.id.text_category_name);
+				holder.imageThumb = (CircularImageView) convertView.findViewById(R.id.image_thumb);
 				convertView.setTag(holder);
 			} else {
 				holder = (ViewHolder) convertView.getTag();
@@ -163,6 +164,7 @@ public class PersonalFragment extends Fragment {
 
 			if (mDataList != null) {
 				holder.textTitle.setText(mDataList.get(position).getCategory());
+				holder.imageThumb.setImageBitmap(Utils.getBitmapFromInternal(getActivity(), mDataList.get(position).getImgUrl()));
 			}
 
 			holder.position = position;
@@ -173,11 +175,11 @@ public class PersonalFragment extends Fragment {
 
 	class ViewHolder {
 		int position;
-		ImageView imageThumb;
+		CircularImageView imageThumb;
 		TextView textTitle;
 	}
 
-	public void updateData(){
+	public void updateData() {
 		parseData(getCategoryCursorFromDB());
 	}
 
