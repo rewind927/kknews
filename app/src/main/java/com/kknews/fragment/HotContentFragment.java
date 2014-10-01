@@ -102,12 +102,13 @@ public class HotContentFragment extends Fragment {
 					mAdapterHotEntry.notifyDataSetChanged();
 
 				} else {
-					TextView textDescription = (TextView) view.findViewById(R.id.text_description);
-					if (textDescription.getVisibility() == View.GONE) {
-						textDescription.setVisibility(View.VISIBLE);
+					Integer pos = new Integer(position);
+					if (mAdapterHotEntry.getOpenDescription().contains(pos)) {
+						mAdapterHotEntry.getOpenDescription().remove(pos);
 					} else {
-						textDescription.setVisibility(View.GONE);
+						mAdapterHotEntry.getOpenDescription().add(pos);
 					}
+					mAdapterHotEntry.notifyDataSetChanged();
 				}
 
 			}
@@ -263,6 +264,7 @@ public class HotContentFragment extends Fragment {
 
 		private LayoutInflater inflater;
 		private ArrayList<Integer> selectedIds = new ArrayList<Integer>();
+		private ArrayList<Integer> openDescription = new ArrayList<Integer>();
 
 		HotEntryAdapter(Context ctx) {
 			inflater = LayoutInflater.from(ctx);
@@ -312,6 +314,12 @@ public class HotContentFragment extends Fragment {
 				holder.textTitle.setTextColor(Color.BLACK);
 			}
 
+			if (openDescription.contains(i)) {
+				holder.textDescription.setVisibility(View.VISIBLE);
+			} else {
+				holder.textDescription.setVisibility(View.GONE);
+			}
+
 			new LoadImage(i, holder, mDataList.get(i).getImgUrl()).execute();
 
 			return convertView;
@@ -320,6 +328,8 @@ public class HotContentFragment extends Fragment {
 		public ArrayList getSelectIds() {
 			return selectedIds;
 		}
+
+		public ArrayList getOpenDescription() {return openDescription;}
 	}
 
 	class ViewHolder {
