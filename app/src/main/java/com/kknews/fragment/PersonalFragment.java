@@ -3,6 +3,7 @@ package com.kknews.fragment;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -421,13 +422,21 @@ public class PersonalFragment extends Fragment {
 			values.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbName);
 		}
 		values.put(NewsContentDBHelper.COLUMN_FILE, replaceTitle);
-		mDB.update(NewsContentDBHelper.TABLE_CATEGORY, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'", null);
+		try{
+			mDB.update(NewsContentDBHelper.TABLE_CATEGORY, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'", null);
+		}catch (SQLiteConstraintException exception){
+			deleteCategory(originalTitle);
+		}
 	}
 
 	private void updateContentCategory(String originalTitle, String replaceTitle) {
 		ContentValues values = new ContentValues();
 		values.put(NewsContentDBHelper.COLUMN_FILE, replaceTitle);
-		mDB.update(NewsContentDBHelper.TABLE_CONTENT, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'", null);
+		try{
+			mDB.update(NewsContentDBHelper.TABLE_CONTENT, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'", null);
+		}catch (SQLiteConstraintException exception){
+			//deleteContent();
+		}
 	}
 
 	private void deleteCategory(String category) {
