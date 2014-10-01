@@ -4,6 +4,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -81,7 +83,7 @@ public class PersonalFragment extends Fragment {
 					fragmentTransaction.add(R.id.rl_view, fragment);
 					fragmentTransaction.commit();
 				} else {
-					Log.d(TAG,"->> select:"+position);
+					Log.d(TAG, "->> select:" + position);
 					Integer pos = new Integer(position);
 					if (mCateGoryAdapter.getSelectIds().contains(pos)) {
 						mCateGoryAdapter.getSelectIds().remove(pos);
@@ -156,8 +158,12 @@ public class PersonalFragment extends Fragment {
 				mGridViewShowCategory.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 				mMultiSelectMode = true;
 				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
-				((MyActivity)getActivity()).setTabHostVisible(View.GONE);
+				((MyActivity) getActivity()).setTabHostVisible(View.GONE);
 				break;
+			case R.id.action_add_file:
+				showAddFileDialog();
+				break;
+
 			default:
 				break;
 		}
@@ -218,7 +224,14 @@ public class PersonalFragment extends Fragment {
 
 			if (mDataList != null) {
 				holder.textTitle.setText(mDataList.get(position).getCategory());
-				holder.imageThumb.setImageBitmap(Utils.getBitmapFromInternal(getActivity(), mDataList.get(position).getImgUrl()));
+				Bitmap bitmap = Utils.getBitmapFromInternal(getActivity(), mDataList.get(position).getImgUrl());
+				if (bitmap != null) {
+					holder.imageThumb.setImageBitmap(bitmap);
+				} else {
+					holder.imageThumb.setImageBitmap(BitmapFactory.decodeResource(getActivity().getResources(),
+							R.drawable.ic_launcher));
+				}
+
 				if (selectedIds.contains(position)) {
 					holder.imageThumb.setBorderColor(getResources().getColor(R.color.card_undobar_material_text_color));
 				} else {
@@ -266,7 +279,7 @@ public class PersonalFragment extends Fragment {
 
 					mCateGoryAdapter.getSelectIds().clear();
 					mCateGoryAdapter.notifyDataSetChanged();
-					((MyActivity)getActivity()).setTabHostVisible(View.VISIBLE);
+					((MyActivity) getActivity()).setTabHostVisible(View.VISIBLE);
 					break;
 			}
 		}
@@ -313,7 +326,8 @@ public class PersonalFragment extends Fragment {
 	}
 
 	private Cursor getCategoryContentCursorFromDB(String title) {
-		Cursor cursor = mDB.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_THUMBNAIL + " FROM " + NewsContentDBHelper.TABLE_CONTENT + " " +
+		Cursor cursor = mDB.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_THUMBNAIL + " FROM " + NewsContentDBHelper.TABLE_CONTENT + "" +
+				" " +
 				"WHERE " + NewsContentDBHelper.COLUMN_FILE + " = '" + title + "'", null);
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
@@ -333,6 +347,37 @@ public class PersonalFragment extends Fragment {
 		}
 
 		return imageList;
+	}
+
+	private void showAddFileDialog() {
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+		if (prev != null) {
+			ft.remove(prev);
+		}
+		ft.addToBackStack(null);
+
+		final NewFileInFavoriteDialogFragment newFragment = NewFileInFavoriteDialogFragment.newInstance();
+
+		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
+		newFragment.setCallBack(new DialogClickListener() {
+			@Override
+			public void onCancelClick() {
+
+			}
+
+			@Override
+			public void onOkClick() {
+				String fileName = newFragment.getFileName();
+				if (fileName == null || fileName.equals("")) {
+					return;
+				}
+				insertCategoryData(fileName, "");
+				updateData();
+				mCateGoryAdapter.notifyDataSetChanged();
+
+			}
+		});
 	}
 
 	private void showDialog(final String title) {
@@ -386,7 +431,7 @@ public class PersonalFragment extends Fragment {
 	}
 
 	private void deleteCategory(String category) {
-		Log.d(TAG,"delete:"+category);
+		Log.d(TAG, "delete:" + category);
 		deleteContent(category);
 
 		mDB.delete(NewsContentDBHelper.TABLE_CATEGORY, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + category + "'", null);
@@ -394,5 +439,12 @@ public class PersonalFragment extends Fragment {
 
 	private void deleteContent(String category) {
 		mDB.delete(NewsContentDBHelper.TABLE_CONTENT, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + category + "'", null);
+	}
+
+	private void insertCategoryData(String fileName, String thumbFileName) {
+		ContentValues value = new ContentValues();
+		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
+		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbFileName);
+		mDB.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
 	}
 }
