@@ -23,6 +23,9 @@ public class Utils {
 	public static final String PASS_EDIT_TITLE_KEY = "PASS_EDIT_TITLE_KEY";
 	public static final String PASS_THUMB_NAME_KEY = "PASS_THUMB_NAME_KEY";
 
+	public static final String ACTION_REFRESH_UI = "com.kknews.ACTION_REFRESH_UI";
+
+
 	public static final String HOT_CONTENT_GUID = "guid";
 	public static final String HOT_CONTENT_DATE = "gc:date";
 	public static final String HOT_CONTENT_DESCRIPTION = "description";

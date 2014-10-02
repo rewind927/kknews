@@ -1,9 +1,13 @@
 package com.kknews.fragment;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -19,6 +23,7 @@ import android.widget.TextView;
 
 import com.example.ryanwang.helloworld.R;
 import com.kknews.data.ListDataObject;
+import com.kknews.service.GetMetaDataService;
 import com.kknews.util.Utils;
 
 import org.jsoup.Jsoup;
@@ -204,6 +209,41 @@ public class HotFragment extends Fragment {
 		public void handleMessage(Message msg) {
 			mAdapterHotEntry = new HotEntryAdapter(getActivity());
 			mListViewHotEntry.setAdapter(mAdapterHotEntry);
+
+			Intent startIntent = new Intent(getActivity(), GetMetaDataService.class);
+			Bundle bundle = new Bundle();
+
+			ArrayList<String> urls = new ArrayList<String>();
+			ArrayList<String> titles = new ArrayList<String>();
+
+			for (int i=0;i<mDataList.size();i++){
+				urls.add(mDataList.get(i).getUrl());
+				titles.add(mDataList.get(i).getTitle());
+			}
+			bundle.putStringArrayList("url",urls);
+			bundle.putStringArrayList("titles",titles);
+			startIntent.putExtras(bundle);
+
+			//getActivity().bindService(startIntent, connection, getActivity().BIND_AUTO_CREATE);
+
+			getActivity().startService(startIntent);
+		}
+	};
+
+	private GetMetaDataService.MyBinder myBinder;
+
+	private ServiceConnection connection = new ServiceConnection() {
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			myBinder = (GetMetaDataService.MyBinder) service;
+			ArrayList data = myBinder.getData();
+
+			Log.d(TAG,"------------------------data:"+data.size()+"-----------------------------");
 		}
 	};
 

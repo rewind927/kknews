@@ -1,8 +1,12 @@
 package com.kknews.fragment;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -30,6 +34,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
 import com.kknews.callback.DialogClickListener;
@@ -71,6 +76,9 @@ public class HotContentFragment extends Fragment {
 	//db
 	private NewsContentDBHelper mDbHelper;
 	private SQLiteDatabase mDB;
+	//broadcast
+	private UpdateUIReceiver mUpdateUiReceiver;
+
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -129,11 +137,23 @@ public class HotContentFragment extends Fragment {
 	@Override
 	public void onResume() {
 		super.onResume();
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Utils.ACTION_REFRESH_UI);
+		getActivity().registerReceiver(mUpdateUiReceiver,filter);
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
+		mDataList = parseData(getDataCursorFormDB(mTitle));
+		mAdapterHotEntry = new HotEntryAdapter(getActivity());
+		mListViewHotContent.setAdapter(mAdapterHotEntry);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		getActivity().unregisterReceiver(mUpdateUiReceiver);
 	}
 
 	@Override
@@ -169,12 +189,14 @@ public class HotContentFragment extends Fragment {
 		Bundle bundle = this.getArguments();
 		final String dataUrl = bundle.getString(Utils.PASS_URL_KEY, null);
 
-		new Thread() {
-			@Override
-			public void run() {
-				getData(dataUrl);
-			}
-		}.start();
+//		new Thread() {
+//			@Override
+//			public void run() {
+//				getData(dataUrl);
+//			}
+//		}.start();
+
+		mUpdateUiReceiver = new UpdateUIReceiver();
 
 		super.onCreate(savedInstanceState);
 	}
@@ -203,6 +225,36 @@ public class HotContentFragment extends Fragment {
 				break;
 		}
 		return true;
+	}
+
+	private Cursor getDataCursorFormDB(String title){
+		return mDB.rawQuery("SELECT * FROM "+NewsContentDBHelper.TABLE_KKEWNS_CONTENT + " WHERE "+NewsContentDBHelper.COLUMN_FILE + " = " + "'"+title+"' ORDER BY "+NewsContentDBHelper.COLUMN_ID+";",null);
+	}
+
+	private ArrayList parseData(Cursor cursor){
+		if (cursor == null){
+			return null;
+		}
+		ArrayList<ContentDataObject> dataList = null;
+		dataList = new ArrayList<ContentDataObject>();
+		cursor.moveToFirst();
+
+		while (!cursor.isAfterLast()) {
+			ContentDataObject data = new ContentDataObject();
+			data.setTitle(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_TITLE)));
+			data.setCategory(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_CATEGORY)));
+			data.setDate(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_DATE)));
+			data.setLink(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_URL)));
+			data.setImgUrl(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
+			data.setDescription(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_DESCRIPTION)));
+
+			Log.d(TAG, "category:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_FILE)));
+			Log.d(TAG, "thumbnail:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
+			cursor.moveToNext();
+
+			dataList.add(data);
+		}
+		return dataList;
 	}
 
 	private void getData(String url) {
@@ -371,6 +423,15 @@ public class HotContentFragment extends Fragment {
 		}
 	};
 
+	Handler mUIHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			Toast.makeText(getActivity(),"get data",Toast.LENGTH_SHORT).show();
+			mAdapterHotEntry.notifyDataSetChanged();
+
+		}
+	};
+
 	Handler mHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -479,7 +540,18 @@ public class HotContentFragment extends Fragment {
 				}
 			}
 		}
-
 	}
+	class UpdateUIReceiver extends BroadcastReceiver {
 
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Bundle bundle = intent.getExtras();
+			if (bundle.getString(Utils.PASS_TITLE_KEY).equals(mTitle)) {
+				mDataList = parseData(getDataCursorFormDB(mTitle));
+				mAdapterHotEntry = new HotEntryAdapter(getActivity());
+				mListViewHotContent.setAdapter(mAdapterHotEntry);
+
+			}
+		}
+	}
 }
