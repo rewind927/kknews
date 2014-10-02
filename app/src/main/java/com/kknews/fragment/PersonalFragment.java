@@ -291,6 +291,9 @@ public class PersonalFragment extends Fragment {
 	}
 
 	private Cursor getCategoryCursorFromDB() {
+		if (mDB == null) {
+			return null;
+		}
 		Cursor cursor = mDB.rawQuery(NewsContentDBHelper.SQL_SELECT_CATEGORY_DATA, null);
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
