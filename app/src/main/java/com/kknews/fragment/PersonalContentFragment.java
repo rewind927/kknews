@@ -73,12 +73,13 @@ public class PersonalContentFragment extends Fragment {
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.d(TAG,"PersonalContentFragment.onCreateView()");
+		Log.d(TAG, "PersonalContentFragment.onCreateView()");
 		View view = inflater.inflate(R.layout.layout_hot_content, container, false);
 		TextView textHotTitle = (TextView) view.findViewById(R.id.text_hot_title);
 		Bundle bundle = this.getArguments();
 		mTitle = bundle.getString(Utils.PASS_TITLE_KEY, null);
 		textHotTitle.setText(mTitle);
+		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
 
 		mListViewHotContent = (ListView) view.findViewById(R.id.listview_hot_content);
 		mAdapterHotEntry = new HotEntryAdapter(getActivity());
@@ -199,21 +200,19 @@ public class PersonalContentFragment extends Fragment {
 				holder = (ViewHolder) convertView.getTag();
 			}
 
-			if (mDataList != null){
+			if (mDataList != null) {
 				holder.textTitle.setText(mDataList.get(i).getTitle());
 				holder.textDescription.setMovementMethod(LinkMovementMethod.getInstance());
 				holder.textDescription.setText(Html.fromHtml(mDataList.get(i).getDescription()));
 				Bitmap bitmap = Utils.getBitmapFromInternal(getActivity(), mDataList.get(i).getImgUrl());
-				if (bitmap != null){
+				if (bitmap != null) {
 					holder.viewThumb.setImageBitmap(bitmap);
-				}else {
-					holder.viewThumb.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.ic_launcher));
+				} else {
+					holder.viewThumb.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
 				}
 			}
 
 			holder.position = i;
-
-
 
 			if (selectedIds.contains(i)) {
 				holder.textTitle.setTextColor(Color.RED);
@@ -265,8 +264,9 @@ public class PersonalContentFragment extends Fragment {
 		}
 	}
 
-	private Cursor getDataCursorFromDB(){
-		Cursor cursor = mDB.rawQuery("SELECT * FROM "+NewsContentDBHelper.TABLE_CONTENT+" WHERE "+NewsContentDBHelper.COLUMN_FILE +" = '"+mTitle+"'", null);
+	private Cursor getDataCursorFromDB() {
+		Cursor cursor = mDB.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_CONTENT + " WHERE " + NewsContentDBHelper.COLUMN_FILE +
+				" = '" + mTitle + "'", null);
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
 			Log.d(TAG, "title:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_TITLE)));

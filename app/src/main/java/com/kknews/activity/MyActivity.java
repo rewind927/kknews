@@ -4,8 +4,10 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TabHost;
 import android.widget.TabHost.TabContentFactory;
@@ -36,12 +38,27 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_my);
 
+		getActionBar().setHomeButtonEnabled(true);
+
 		initialiseTabHost(savedInstanceState);
 		if (savedInstanceState != null) {
 			mTabHost.setCurrentTabByTag(savedInstanceState.getString("tab")); //set the tab as per the saved state
 		}
 		intialiseViewPager();
 
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				getActionBar().setDisplayHomeAsUpEnabled(false);
+				FragmentManager fm = getSupportFragmentManager();
+				if (fm.getBackStackEntryCount() > 0) {
+					fm.popBackStack();
+				}
+		}
+		return true;
 	}
 
 	@Override

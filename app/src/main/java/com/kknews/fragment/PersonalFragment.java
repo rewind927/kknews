@@ -66,6 +66,7 @@ public class PersonalFragment extends Fragment {
 		Log.d(TAG, "onCreateView");
 		View view = inflater.inflate(R.layout.layout_personal, container, false);
 		mLayoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
+		getActivity().getActionBar().setDisplayHomeAsUpEnabled(false);
 		mGridViewShowCategory = (GridView) view.findViewById(R.id.gridview_show_category);
 		mCateGoryAdapter = new CategoryAdapter(getActivity());
 		mGridViewShowCategory.setAdapter(mCateGoryAdapter);

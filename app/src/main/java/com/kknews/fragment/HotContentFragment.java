@@ -88,6 +88,8 @@ public class HotContentFragment extends Fragment {
 		mTitle = bundle.getString(Utils.PASS_TITLE_KEY, null);
 		textHotTitle.setText(mTitle);
 
+		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+
 		mLayoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
 		mButtonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);
 		mButtonMultiSelectCancel = (Button) view.findViewById(R.id.button_multi_select_cancel);

@@ -47,6 +47,7 @@ public class HotFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.layout_hot, container, false);
+
 		mListViewHotEntry = (ListView) view.findViewById(R.id.listview_hot_entry);
 		mListViewHotEntry.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
