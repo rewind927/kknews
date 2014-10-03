@@ -154,6 +154,12 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 		}
 	}
 
+	@Override
+	public void onBackPressed() {
+		getActionBar().setDisplayHomeAsUpEnabled(false);
+		super.onBackPressed();
+	}
+
 	public void setTabHostVisible(int visible) {
 		if (mTabHost != null) {
 			mTabHost.getTabWidget().setVisibility(visible);
