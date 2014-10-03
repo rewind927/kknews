@@ -31,6 +31,8 @@
 	<string name="delete">刪除</string>
 	<string name="new_file">新增</string>
 
+	<string name="add_success">加入成功</string>
+
 	<string name="exit">離開</string>
 
 	<string name="exit_description">確定是否離開?</string>

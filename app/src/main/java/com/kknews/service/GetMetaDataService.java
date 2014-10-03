@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.kknews.data.ContentDataObject;
 import com.kknews.database.NewsContentDBHelper;
+import com.kknews.util.Def;
 import com.kknews.util.Utils;
 
 import org.jsoup.Jsoup;
@@ -142,15 +143,15 @@ public class GetMetaDataService extends Service {
 				ContentDataObject data = new ContentDataObject();
 
 				for (Element subEl : el.children()) {
-					if (subEl.tag().toString().equals(Utils.HOT_CONTENT_TITLE)) {
+					if (subEl.tag().toString().equals(Def.HOT_CONTENT_TITLE)) {
 						data.setTitle(subEl.text());
-					} else if (subEl.tag().toString().equals(Utils.HOT_CONTENT_CATEGORY)) {
+					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_CATEGORY)) {
 						data.setCategory(subEl.text());
-					} else if (subEl.tag().toString().equals(Utils.HOT_CONTENT_GUID)) {
+					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_GUID)) {
 						data.setLink(subEl.text());
-					} else if (subEl.tag().toString().equals(Utils.HOT_CONTENT_DATE)) {
+					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_DATE)) {
 						data.setDate(subEl.text());
-					} else if (subEl.tag().toString().equals(Utils.HOT_CONTENT_DESCRIPTION)) {
+					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_DESCRIPTION)) {
 						String html = subEl.text();
 						Document docDescription = Jsoup.parse(html);
 						Elements elements = docDescription.select("img");
@@ -252,9 +253,9 @@ public class GetMetaDataService extends Service {
 	private void sendUIRefresh(String title) {
 		Intent intent = new Intent();
 		Bundle bundle = new Bundle();
-		bundle.putString(Utils.PASS_TITLE_KEY, title);
+		bundle.putString(Def.PASS_TITLE_KEY, title);
 		intent.putExtras(bundle);
-		intent.setAction(Utils.ACTION_REFRESH_UI);
+		intent.setAction(Def.ACTION_REFRESH_UI);
 		sendBroadcast(intent);
 	}
 

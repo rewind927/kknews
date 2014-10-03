@@ -13,7 +13,7 @@ import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
 import com.kknews.callback.DialogClickListener;
-import com.kknews.util.Utils;
+import com.kknews.util.Def;
 
 /**
  * Created by ryanwang on 2014/9/29.
@@ -30,8 +30,8 @@ public class AddToMyFavoriteDialogFragment extends DialogFragment {
 		AddToMyFavoriteDialogFragment fragment = new AddToMyFavoriteDialogFragment();
 
 		Bundle args = new Bundle();
-		args.putString(Utils.PASS_EDIT_TEXT_KEY, editText);
-		args.putString(Utils.PASS_EDIT_TITLE_KEY, title);
+		args.putString(Def.PASS_EDIT_TEXT_KEY, editText);
+		args.putString(Def.PASS_EDIT_TITLE_KEY, title);
 		fragment.setArguments(args);
 
 		return fragment;
@@ -45,10 +45,10 @@ public class AddToMyFavoriteDialogFragment extends DialogFragment {
 
 		View v = inflater.inflate(R.layout.layout_add_to_my_favorite_dialog,container,false);
 		TextView textTitle = (TextView) v.findViewById(R.id.text_title);
-		textTitle.setText(getArguments().getString(Utils.PASS_EDIT_TITLE_KEY));
+		textTitle.setText(getArguments().getString(Def.PASS_EDIT_TITLE_KEY));
 
 		mTextInputFileName = (EditText) v.findViewById(R.id.text_input_file_name);
-		mTextInputFileName.setText(getArguments().getString(Utils.PASS_EDIT_TEXT_KEY));
+		mTextInputFileName.setText(getArguments().getString(Def.PASS_EDIT_TEXT_KEY));
 
 		mButtonCancel = (Button) v.findViewById(R.id.button_cancel);
 		mButtonCancel.setOnClickListener(new View.OnClickListener() {
@@ -65,7 +65,7 @@ public class AddToMyFavoriteDialogFragment extends DialogFragment {
 			public void onClick(View v) {
 				callback.onOkClick();
 				dismiss();
-				Toast.makeText(getActivity(), "加入成功", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getActivity(),getString(R.string.add_success), Toast.LENGTH_SHORT).show();
 			}
 		});
 

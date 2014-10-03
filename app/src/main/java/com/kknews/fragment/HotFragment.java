@@ -24,7 +24,7 @@ import android.widget.TextView;
 import com.example.ryanwang.helloworld.R;
 import com.kknews.data.ListDataObject;
 import com.kknews.service.GetMetaDataService;
-import com.kknews.util.Utils;
+import com.kknews.util.Def;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -57,8 +57,8 @@ public class HotFragment extends Fragment {
 				fragmentTransaction.addToBackStack(null);
 				HotContentFragment fragment = new HotContentFragment();
 				Bundle bundle = new Bundle();
-				bundle.putString(Utils.PASS_URL_KEY,mDataList.get(i).getUrl());
-				bundle.putString(Utils.PASS_TITLE_KEY,mDataList.get(i).getTitle());
+				bundle.putString(Def.PASS_URL_KEY,mDataList.get(i).getUrl());
+				bundle.putString(Def.PASS_TITLE_KEY,mDataList.get(i).getTitle());
 				fragment.setArguments(bundle);
 				fragmentTransaction.add(R.id.rl_view, fragment);
 				fragmentTransaction.commit();
@@ -73,7 +73,7 @@ public class HotFragment extends Fragment {
 		new Thread() {
 			@Override
 			public void run() {
-				getExtractList(Utils.RSS_SUB_URL, new ParseHotEntryCallback() {
+				getExtractList(Def.RSS_SUB_URL, new ParseHotEntryCallback() {
 
 					@Override
 					public void onFinish(ArrayList<ListDataObject> dataList) {

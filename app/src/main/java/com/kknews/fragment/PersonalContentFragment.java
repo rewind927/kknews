@@ -27,6 +27,7 @@ import android.widget.TextView;
 import com.example.ryanwang.helloworld.R;
 import com.kknews.data.ContentDataObject;
 import com.kknews.database.NewsContentDBHelper;
+import com.kknews.util.Def;
 import com.kknews.util.Utils;
 
 import java.util.ArrayList;
@@ -65,7 +66,7 @@ public class PersonalContentFragment extends Fragment {
 		mDB = mDbHelper.getWritableDatabase();
 
 		Bundle bundle = this.getArguments();
-		mTitle = bundle.getString(Utils.PASS_TITLE_KEY, null);
+		mTitle = bundle.getString(Def.PASS_TITLE_KEY, null);
 
 
 
@@ -77,7 +78,7 @@ public class PersonalContentFragment extends Fragment {
 		View view = inflater.inflate(R.layout.layout_hot_content, container, false);
 		TextView textHotTitle = (TextView) view.findViewById(R.id.text_hot_title);
 		Bundle bundle = this.getArguments();
-		mTitle = bundle.getString(Utils.PASS_TITLE_KEY, null);
+		mTitle = bundle.getString(Def.PASS_TITLE_KEY, null);
 		textHotTitle.setText(mTitle);
 
 		setHasOptionsMenu(true);

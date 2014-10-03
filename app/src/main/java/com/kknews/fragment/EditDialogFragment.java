@@ -16,6 +16,7 @@ import android.widget.GridView;
 
 import com.example.ryanwang.helloworld.R;
 import com.kknews.callback.DialogClickListener;
+import com.kknews.util.Def;
 import com.kknews.util.Utils;
 import com.pkmmte.view.CircularImageView;
 
@@ -40,8 +41,8 @@ public class EditDialogFragment extends DialogFragment {
 		EditDialogFragment fragment = new EditDialogFragment();
 
 		Bundle args = new Bundle();
-		args.putString(Utils.PASS_EDIT_TEXT_KEY, editText);
-		args.putStringArrayList(Utils.PASS_THUMB_NAME_KEY, dataList);
+		args.putString(Def.PASS_EDIT_TEXT_KEY, editText);
+		args.putStringArrayList(Def.PASS_THUMB_NAME_KEY, dataList);
 		fragment.setArguments(args);
 
 		return fragment;
@@ -56,9 +57,9 @@ public class EditDialogFragment extends DialogFragment {
 		View v = inflater.inflate(R.layout.layout_edit_file_dialog, container, false);
 
 		mTextInputFileName = (EditText) v.findViewById(R.id.text_input_file_name);
-		mTextInputFileName.setText(getArguments().getString(Utils.PASS_EDIT_TEXT_KEY));
+		mTextInputFileName.setText(getArguments().getString(Def.PASS_EDIT_TEXT_KEY));
 
-		mDataList = getArguments().getStringArrayList(Utils.PASS_THUMB_NAME_KEY);
+		mDataList = getArguments().getStringArrayList(Def.PASS_THUMB_NAME_KEY);
 
 		mCategoryAdapter = new CategoryAdapter(getActivity());
 		mGridCategoryImg = (GridView) v.findViewById(R.id.gridview_show_category_img);

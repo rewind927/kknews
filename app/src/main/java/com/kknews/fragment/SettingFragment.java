@@ -13,6 +13,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.example.ryanwang.helloworld.R;
+import com.kknews.util.Def;
 import com.kknews.util.Utils;
 
 /**
@@ -45,16 +46,16 @@ public class SettingFragment extends Fragment {
 				int time = 0;
 				switch (position) {
 					case 0:
-						time = Utils.THIRTY_SECOND;
+						time = Def.THIRTY_SECOND;
 						break;
 					case 1:
-						time = Utils.ONE_MINUTE;
+						time = Def.ONE_MINUTE;
 						break;
 					case 2:
-						time = Utils.FIVE_MINUTE;
+						time = Def.FIVE_MINUTE;
 						break;
 					case 3:
-						time = Utils.TEN_MINUTE;
+						time = Def.TEN_MINUTE;
 						break;
 				}
 				Utils.writeAutoRefreshTimePreference(getActivity(), time);

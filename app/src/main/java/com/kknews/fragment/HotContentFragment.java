@@ -40,6 +40,7 @@ import com.example.ryanwang.helloworld.R;
 import com.kknews.callback.DialogClickListener;
 import com.kknews.data.ContentDataObject;
 import com.kknews.database.NewsContentDBHelper;
+import com.kknews.util.Def;
 import com.kknews.util.Utils;
 
 import org.jsoup.Jsoup;
@@ -84,7 +85,7 @@ public class HotContentFragment extends Fragment {
 		View view = inflater.inflate(R.layout.layout_hot_content, container, false);
 		TextView textHotTitle = (TextView) view.findViewById(R.id.text_hot_title);
 		Bundle bundle = this.getArguments();
-		mTitle = bundle.getString(Utils.PASS_TITLE_KEY, null);
+		mTitle = bundle.getString(Def.PASS_TITLE_KEY, null);
 		textHotTitle.setText(mTitle);
 
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -139,7 +140,7 @@ public class HotContentFragment extends Fragment {
 	public void onResume() {
 		super.onResume();
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(Utils.ACTION_REFRESH_UI);
+		filter.addAction(Def.ACTION_REFRESH_UI);
 		getActivity().registerReceiver(mUpdateUiReceiver, filter);
 	}
 
@@ -188,14 +189,7 @@ public class HotContentFragment extends Fragment {
 		mDB = mDbHelper.getWritableDatabase();
 
 		Bundle bundle = this.getArguments();
-		final String dataUrl = bundle.getString(Utils.PASS_URL_KEY, null);
-
-//		new Thread() {
-//			@Override
-//			public void run() {
-//				getData(dataUrl);
-//			}
-//		}.start();
+		final String dataUrl = bundle.getString(Def.PASS_URL_KEY, null);
 
 		mUpdateUiReceiver = new UpdateUIReceiver();
 
@@ -229,7 +223,8 @@ public class HotContentFragment extends Fragment {
 	}
 
 	private Cursor getDataCursorFormDB(String title) {
-		return mDB.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_KKEWNS_CONTENT + " WHERE " + NewsContentDBHelper.COLUMN_FILE + "" +
+		return mDB.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_KKEWNS_CONTENT + " WHERE " + NewsContentDBHelper.COLUMN_FILE +
+				"" +
 				" " +
 				"= " + "'" + title + "' ORDER BY " + NewsContentDBHelper.COLUMN_ID + ";", null);
 	}
@@ -280,15 +275,15 @@ public class HotContentFragment extends Fragment {
 				ContentDataObject data = new ContentDataObject();
 
 				for (Element subEl : el.children()) {
-					if (subEl.tag().toString().equals(Utils.HOT_CONTENT_TITLE)) {
+					if (subEl.tag().toString().equals(Def.HOT_CONTENT_TITLE)) {
 						data.setTitle(subEl.text());
-					} else if (subEl.tag().toString().equals(Utils.HOT_CONTENT_CATEGORY)) {
+					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_CATEGORY)) {
 						data.setCategory(subEl.text());
-					} else if (subEl.tag().toString().equals(Utils.HOT_CONTENT_GUID)) {
+					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_GUID)) {
 						data.setLink(subEl.text());
-					} else if (subEl.tag().toString().equals(Utils.HOT_CONTENT_DATE)) {
+					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_DATE)) {
 						data.setDate(subEl.text());
-					} else if (subEl.tag().toString().equals(Utils.HOT_CONTENT_DESCRIPTION)) {
+					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_DESCRIPTION)) {
 						String html = subEl.text();
 						Document docDescription = Jsoup.parse(html);
 						Elements elements = docDescription.select("img");
@@ -400,18 +395,9 @@ public class HotContentFragment extends Fragment {
 			switch (v.getId()) {
 				case R.id.button_multi_select_ok:
 					if (mDB != null) {
-						SparseBooleanArray checkItemList = mListViewHotContent.getCheckedItemPositions();
-						int listSize = mListViewHotContent.getCount();
-						int lastCheckPosition = 0;
-						for (int i = 0; i < listSize; i++) {
-							if (checkItemList.get(i)) {
-								lastCheckPosition = i;
-								Log.d(TAG, i + ":check ok");
-								insertContentData(i, mTitle);
-							}
-						}
-
-						insertCategoryData(mTitle, Utils.encodeBase64(mDataList.get(lastCheckPosition).getImgUrl()));
+						SparseBooleanArray checkItemList;
+						checkItemList = mListViewHotContent.getCheckedItemPositions().clone();
+						showMutliInsertDialog(mTitle, checkItemList);
 					}
 				case R.id.button_multi_select_cancel:
 					mMultiSelectMode = false;
@@ -443,6 +429,46 @@ public class HotContentFragment extends Fragment {
 
 		}
 	};
+
+	private void showMutliInsertDialog(String title, final SparseBooleanArray checkItemList) {
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+		if (prev != null) {
+			ft.remove(prev);
+		}
+		ft.addToBackStack(null);
+
+		final AddToMyFavoriteDialogFragment newFragment = AddToMyFavoriteDialogFragment.newInstance(mTitle, title);
+
+		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
+		newFragment.setCallBack(new DialogClickListener() {
+			@Override
+			public void onCancelClick() {
+				if (checkItemList != null) {
+					checkItemList.clear();
+				}
+			}
+
+			@Override
+			public void onOkClick() {
+				int listSize = mListViewHotContent.getCount();
+				int lastCheckPosition = 0;
+				for (int i = 0; i < listSize; i++) {
+					if (checkItemList.get(i)) {
+						lastCheckPosition = i;
+						Log.d(TAG, i + ":check ok");
+						insertContentData(i, newFragment.getFileName());
+					}
+				}
+
+				insertCategoryData(newFragment.getFileName(), Utils.encodeBase64(mDataList.get(lastCheckPosition).getImgUrl()));
+
+				if (checkItemList != null) {
+					checkItemList.clear();
+				}
+			}
+		});
+	}
 
 	private void showDialog(String title, final int position) {
 
@@ -550,7 +576,7 @@ public class HotContentFragment extends Fragment {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			Bundle bundle = intent.getExtras();
-			if (bundle.getString(Utils.PASS_TITLE_KEY).equals(mTitle)) {
+			if (bundle.getString(Def.PASS_TITLE_KEY).equals(mTitle)) {
 				mDataList = parseData(getDataCursorFormDB(mTitle));
 				mAdapterHotEntry = new HotEntryAdapter(getActivity());
 				mListViewHotContent.setAdapter(mAdapterHotEntry);

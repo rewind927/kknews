@@ -33,6 +33,7 @@ import com.kknews.activity.MyActivity;
 import com.kknews.callback.DialogClickListener;
 import com.kknews.data.CategoryObject;
 import com.kknews.database.NewsContentDBHelper;
+import com.kknews.util.Def;
 import com.kknews.util.Utils;
 import com.pkmmte.view.CircularImageView;
 
@@ -80,7 +81,7 @@ public class PersonalFragment extends Fragment {
 					PersonalContentFragment fragment = new PersonalContentFragment();
 					Bundle bundle = new Bundle();
 					Log.d(TAG, "mDataList.get(position).getCategory():" + mDataList.get(position).getCategory());
-					bundle.putString(Utils.PASS_TITLE_KEY, mDataList.get(position).getCategory());
+					bundle.putString(Def.PASS_TITLE_KEY, mDataList.get(position).getCategory());
 					fragment.setArguments(bundle);
 					fragmentTransaction.add(R.id.rl_view, fragment);
 					fragmentTransaction.commit();
