@@ -230,6 +230,7 @@ public class GetMetaDataService extends Service {
 		} else {
 			deleteContentInCategory(mSectionName.get(position));
 		}
+		mDB.beginTransaction();
 		for (int j = 0; j < mDataList.get(position).size(); j++) {
 			ContentDataObject data = mDataList.get(position).get(j);
 			ContentValues value = new ContentValues();
@@ -243,6 +244,8 @@ public class GetMetaDataService extends Service {
 			Log.d(TAG, "insert:" + data.getTitle());
 			mDB.insert(NewsContentDBHelper.TABLE_KKEWNS_CONTENT, null, value);
 		}
+		mDB.setTransactionSuccessful();
+		mDB.endTransaction();
 		sendUIRefresh(mSectionName.get(position));
 	}
 
