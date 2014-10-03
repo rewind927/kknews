@@ -92,21 +92,21 @@ public class GetMetaDataService extends Service {
 			mThread.interrupt();
 		}
 
-//		if (mDbHelper != null) {
-//			mDbHelper.close();
-//		}
-//		if (mDB != null) {
-//			mDB.close();
-//		}
-//		if (mDataList != null) {
-//			mDataList.clear();
-//		}
-//		if (mRssUrls != null) {
-//			mRssUrls.clear();
-//		}
-//		if (mSectionName != null) {
-//			mSectionName.clear();
-//		}
+		if (mDbHelper != null) {
+			mDbHelper.close();
+		}
+		if (mDB != null) {
+			mDB.close();
+		}
+		if (mDataList != null) {
+			mDataList.clear();
+		}
+		if (mRssUrls != null) {
+			mRssUrls.clear();
+		}
+		if (mSectionName != null) {
+			mSectionName.clear();
+		}
 
 	}
 
