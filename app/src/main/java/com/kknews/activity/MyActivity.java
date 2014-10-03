@@ -1,6 +1,8 @@
 package com.kknews.activity;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -158,13 +160,38 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 	@Override
 	public void onBackPressed() {
 		getActionBar().setDisplayHomeAsUpEnabled(false);
-		super.onBackPressed();
+		FragmentManager fm = getSupportFragmentManager();
+		if (fm.getBackStackEntryCount() > 0) {
+			super.onBackPressed();
+		}else {
+			showExitDialog();
+		}
+
 	}
 
 	public void setTabHostVisible(int visible) {
 		if (mTabHost != null) {
 			mTabHost.getTabWidget().setVisibility(visible);
 		}
+	}
+
+	private void showExitDialog(){
+		AlertDialog.Builder exitAlertDialog = new AlertDialog.Builder(this);
+		exitAlertDialog.setTitle(getString(R.string.exit));
+		exitAlertDialog.setMessage(getString(R.string.exit_description));
+		exitAlertDialog.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+
+			}
+		});
+		exitAlertDialog.setPositiveButton(getString(R.string.exit), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				finish();
+			}
+		});
+		exitAlertDialog.show();
 	}
 
 }
