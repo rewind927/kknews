@@ -234,7 +234,7 @@ public class PersonalFragment extends Fragment {
 				}
 
 				if (selectedIds.contains(position)) {
-					holder.imageThumb.setBorderColor(getResources().getColor(R.color.card_undobar_material_text_color));
+					holder.imageThumb.setBorderColor(Color.GREEN);
 				} else {
 					holder.imageThumb.setBorderColor(Color.WHITE);
 				}

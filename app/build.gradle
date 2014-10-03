@@ -23,8 +23,6 @@ dependencies {
 	compile fileTree(dir: 'libs', include: ['*.jar'])
 	compile files('libs/jsoup-1.7.3.jar')
 	compile project(':android-support-v4')
-	//Core card library
-	compile 'com.github.gabrielemariotti.cards:library:1.9.1'
 	//Circle image library
 	compile 'com.pkmmte.view:circularimageview:1.1'
 }

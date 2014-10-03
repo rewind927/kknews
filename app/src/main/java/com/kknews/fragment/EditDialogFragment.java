@@ -161,7 +161,7 @@ public class EditDialogFragment extends DialogFragment {
 				holder.imageThumb.setImageBitmap(Utils.getBitmapFromInternal(getActivity(), mDataList.get(position)));
 
 				if (selectedId == position) {
-					holder.imageThumb.setBorderColor(getResources().getColor(R.color.card_undobar_material_text_color));
+					holder.imageThumb.setBorderColor(Color.GREEN);
 				} else {
 					holder.imageThumb.setBorderColor(Color.WHITE);
 				}

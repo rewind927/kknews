@@ -39,7 +39,7 @@
 			android:layout_height="wrap_content"
 			android:layout_marginTop="10dp"
 			android:layout_below="@+id/rl_title_area"
-			android:background="@color/card_foreground_activated">
+			>
 		<TextView
 				android:id="@+id/text_description"
 				android:layout_width="match_parent"
