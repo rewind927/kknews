@@ -18,6 +18,7 @@
 		</activity>
 		<service android:name="com.kknews.service.GetMetaDataService">
 		</service>
+		<activity android:name="net.hockeyapp.android.UpdateActivity" />
 	</application>
 
 	<uses-permission android:name="android.permission.INTERNET"/>

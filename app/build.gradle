@@ -25,4 +25,5 @@ dependencies {
 	compile project(':android-support-v4')
 	//Circle image library
 	compile 'com.pkmmte.view:circularimageview:1.1'
+	compile files('libs/HockeySDK-3.0.2.jar')
 }

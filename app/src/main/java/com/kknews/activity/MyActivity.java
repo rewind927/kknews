@@ -20,6 +20,9 @@ import com.kknews.fragment.HotFragment;
 import com.kknews.fragment.PersonalFragment;
 import com.kknews.fragment.SettingFragment;
 
+import net.hockeyapp.android.CrashManager;
+import net.hockeyapp.android.UpdateManager;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -48,6 +51,12 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 		}
 		intialiseViewPager();
 
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		checkForCrashes();
 	}
 
 	@Override
@@ -192,6 +201,15 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 			}
 		});
 		exitAlertDialog.show();
+	}
+
+	private void checkForCrashes() {
+		CrashManager.register(this, "372550dc8bd683a8457c9f793430ed99");
+	}
+
+	private void checkForUpdates() {
+		// Remove this for store builds!
+		UpdateManager.register(this, "372550dc8bd683a8457c9f793430ed99");
 	}
 
 }
