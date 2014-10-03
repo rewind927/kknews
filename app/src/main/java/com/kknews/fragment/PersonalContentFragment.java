@@ -59,8 +59,7 @@ public class PersonalContentFragment extends Fragment {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-
-		setHasOptionsMenu(true);
+		super.onCreate(savedInstanceState);
 
 		mDbHelper = new NewsContentDBHelper(getActivity());
 		mDB = mDbHelper.getWritableDatabase();
@@ -68,7 +67,8 @@ public class PersonalContentFragment extends Fragment {
 		Bundle bundle = this.getArguments();
 		mTitle = bundle.getString(Utils.PASS_TITLE_KEY, null);
 
-		super.onCreate(savedInstanceState);
+
+
 	}
 
 	@Override
@@ -79,6 +79,8 @@ public class PersonalContentFragment extends Fragment {
 		Bundle bundle = this.getArguments();
 		mTitle = bundle.getString(Utils.PASS_TITLE_KEY, null);
 		textHotTitle.setText(mTitle);
+
+		setHasOptionsMenu(true);
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
 
 		mListViewHotContent = (ListView) view.findViewById(R.id.listview_hot_content);
@@ -145,16 +147,25 @@ public class PersonalContentFragment extends Fragment {
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		inflater.inflate(R.menu.action_menu, menu);
+		//inflater.inflate(R.menu.action_menu, menu);
 		if (menu != null) {
 			menu.findItem(R.id.action_add_my_favorite).setVisible(false);
 			menu.findItem(R.id.action_add_file).setVisible(false);
 			menu.findItem(R.id.action_delete_file).setVisible(false);
 		}
+		super.onCreateOptionsMenu(menu,inflater);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		Log.d("123","here---------------------------------------------------------------------------------");
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				getActivity().onBackPressed();
+				break;
+			default:
+				break;
+		}
 		return true;
 	}
 
@@ -256,8 +267,6 @@ public class PersonalContentFragment extends Fragment {
 			data.setDescription(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_DESCRIPTION)));
 			data.setCategory(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_FILE)));
 			data.setImgUrl(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
-			Log.d(TAG, "category:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_FILE)));
-			Log.d(TAG, "thumbnail:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
 			cursor.moveToNext();
 
 			mDataList.add(data);

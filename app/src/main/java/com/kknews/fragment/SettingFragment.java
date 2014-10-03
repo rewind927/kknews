@@ -36,7 +36,8 @@ public class SettingFragment extends Fragment {
 			}
 		});
 		Spinner spinnerChoiceTime = (Spinner) view.findViewById(R.id.spinner_choice_time);
-		ArrayAdapter spinnerAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, mSpinnerText);
+		ArrayAdapter spinnerAdapter = new ArrayAdapter<String>(getActivity(),R.layout.layout_spinner, mSpinnerText);
+		spinnerAdapter.setDropDownViewResource(R.layout.layout_spinner);
 		spinnerChoiceTime.setAdapter(spinnerAdapter);
 		spinnerChoiceTime.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			@Override

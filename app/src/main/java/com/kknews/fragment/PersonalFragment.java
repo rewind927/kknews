@@ -150,6 +150,7 @@ public class PersonalFragment extends Fragment {
 			menu.findItem(R.id.action_add_file).setVisible(true);
 			menu.findItem(R.id.action_delete_file).setVisible(true);
 		}
+		super.onCreateOptionsMenu(menu,inflater);
 	}
 
 	@Override

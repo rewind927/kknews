@@ -79,7 +79,6 @@ public class HotContentFragment extends Fragment {
 	//broadcast
 	private UpdateUIReceiver mUpdateUiReceiver;
 
-
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.layout_hot_content, container, false);
@@ -141,7 +140,7 @@ public class HotContentFragment extends Fragment {
 		super.onResume();
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Utils.ACTION_REFRESH_UI);
-		getActivity().registerReceiver(mUpdateUiReceiver,filter);
+		getActivity().registerReceiver(mUpdateUiReceiver, filter);
 	}
 
 	@Override
@@ -229,12 +228,14 @@ public class HotContentFragment extends Fragment {
 		return true;
 	}
 
-	private Cursor getDataCursorFormDB(String title){
-		return mDB.rawQuery("SELECT * FROM "+NewsContentDBHelper.TABLE_KKEWNS_CONTENT + " WHERE "+NewsContentDBHelper.COLUMN_FILE + " = " + "'"+title+"' ORDER BY "+NewsContentDBHelper.COLUMN_ID+";",null);
+	private Cursor getDataCursorFormDB(String title) {
+		return mDB.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_KKEWNS_CONTENT + " WHERE " + NewsContentDBHelper.COLUMN_FILE + "" +
+				" " +
+				"= " + "'" + title + "' ORDER BY " + NewsContentDBHelper.COLUMN_ID + ";", null);
 	}
 
-	private ArrayList parseData(Cursor cursor){
-		if (cursor == null){
+	private ArrayList parseData(Cursor cursor) {
+		if (cursor == null) {
 			return null;
 		}
 		ArrayList<ContentDataObject> dataList = null;
@@ -428,7 +429,7 @@ public class HotContentFragment extends Fragment {
 	Handler mUIHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			Toast.makeText(getActivity(),"get data",Toast.LENGTH_SHORT).show();
+			Toast.makeText(getActivity(), "get data", Toast.LENGTH_SHORT).show();
 			mAdapterHotEntry.notifyDataSetChanged();
 
 		}
@@ -543,6 +544,7 @@ public class HotContentFragment extends Fragment {
 			}
 		}
 	}
+
 	class UpdateUIReceiver extends BroadcastReceiver {
 
 		@Override

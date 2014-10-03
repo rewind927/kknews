@@ -57,8 +57,9 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 				if (fm.getBackStackEntryCount() > 0) {
 					fm.popBackStack();
 				}
+				break;
 		}
-		return true;
+		return false;
 	}
 
 	@Override
