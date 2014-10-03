@@ -15,13 +15,6 @@
 			android:layout_marginLeft="5dp"
 			android:layout_marginBottom="10dp"/>
 
-	<View
-			android:id="@+id/view_divide_line"
-			android:layout_width="fill_parent"
-			android:layout_height="5dp"
-			android:background="@android:color/holo_blue_dark"
-			android:layout_below="@+id/text_title"/>
-
 
 	<TextView
 			android:id="@+id/text_title_auto_refresh"
@@ -31,7 +24,7 @@
 			android:layout_marginRight="10dp"
 			android:layout_marginTop="10dp"
 			android:text="@string/setting_auto_refresh"
-			android:layout_below="@+id/view_divide_line"
+			android:layout_below="@+id/text_title"
 			android:textSize="25sp"/>
 	<TextView
 			android:id="@+id/text_description_auto_refresh"
@@ -65,7 +58,7 @@
 	<Spinner
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:id="@+id/spinner"
+			android:id="@+id/spinner_choice_time"
 			android:layout_below="@+id/text_title_auto_refresh_frequency"
 			android:layout_alignLeft="@+id/text_title_auto_refresh_frequency"
 			android:layout_alignStart="@+id/text_title_auto_refresh_frequency"/>

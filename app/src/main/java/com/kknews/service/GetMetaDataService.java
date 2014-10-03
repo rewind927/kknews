@@ -34,11 +34,6 @@ public class GetMetaDataService extends Service {
 
 	private static final String TAG = "GetMetaDataService";
 
-	private static final int THIRTY_SECOND = 30000;
-	private static final int ONE_MINUTE = 60000;
-	private static final int FIVE_MINUTE = 300000;
-	private static final int TEN_MINUTE = 600000;
-
 	private MyBinder mBinder = new MyBinder();
 
 	private ArrayList<String> mRssUrls;
@@ -50,6 +45,10 @@ public class GetMetaDataService extends Service {
 	private NewsContentDBHelper mDbHelper;
 	private SQLiteDatabase mDB;
 
+	//thread
+	private Thread mThread;
+	private UpdateRunnable mRunnable;
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -57,12 +56,17 @@ public class GetMetaDataService extends Service {
 		mDbHelper = new NewsContentDBHelper(getApplicationContext());
 		mDB = mDbHelper.getWritableDatabase();
 
+		mDataList = new ArrayList<ArrayList<ContentDataObject>>();
+
 		Log.d(TAG, "onCreate() executed");
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.d(TAG, "onStartCommand() executed");
+		if (intent == null) {
+			return START_STICKY_COMPATIBILITY;
+		}
 		if (mRssUrls == null) {
 			mRssUrls = intent.getStringArrayListExtra("url");
 		}
@@ -70,31 +74,11 @@ public class GetMetaDataService extends Service {
 			mSectionName = intent.getStringArrayListExtra("titles");
 		}
 
-		mDataList = new ArrayList<ArrayList<ContentDataObject>>();
-
-		for (int i = 0; i < mRssUrls.size(); i++) {
-			Log.d(TAG, "urls[" + i + "]:" + mRssUrls.get(i));
+		mRunnable = new UpdateRunnable();
+		mThread = new Thread(mRunnable);
+		if (!mThread.isAlive()) {
+			mThread.start();
 		}
-
-		new Thread() {
-			@Override
-			public void run() {
-
-				long a = System.currentTimeMillis();
-				for (int i = 0; i < mRssUrls.size(); i++) {
-					mDataList.add(getXml(mRssUrls.get(i)));
-					insertContentData(i);
-				}
-				long b = System.currentTimeMillis();
-				Log.d(TAG, "time:" + (b - a));
-				for (int i = 0; i < mDataList.size(); i++) {
-					for (int j = 0; j < mDataList.get(i).size(); j++) {
-						downloadImage(mDataList.get(i).get(j).getImgUrl());
-					}
-				}
-
-			}
-		}.start();
 
 		return super.onStartCommand(intent, flags, startId);
 	}
@@ -104,21 +88,25 @@ public class GetMetaDataService extends Service {
 		super.onDestroy();
 		Log.d(TAG, "onDestroy() executed");
 
-		if (mDbHelper != null) {
-			mDbHelper.close();
+		if (mThread.isAlive()) {
+			mThread.interrupt();
 		}
-		if (mDB != null) {
-			mDB.close();
-		}
-		if (mDataList != null) {
-			mDataList.clear();
-		}
-		if (mRssUrls != null) {
-			mRssUrls.clear();
-		}
-		if (mSectionName != null) {
-			mSectionName.clear();
-		}
+
+//		if (mDbHelper != null) {
+//			mDbHelper.close();
+//		}
+//		if (mDB != null) {
+//			mDB.close();
+//		}
+//		if (mDataList != null) {
+//			mDataList.clear();
+//		}
+//		if (mRssUrls != null) {
+//			mRssUrls.clear();
+//		}
+//		if (mSectionName != null) {
+//			mSectionName.clear();
+//		}
 
 	}
 
@@ -285,9 +273,40 @@ public class GetMetaDataService extends Service {
 	}
 
 	class UpdateRunnable implements Runnable {
+
 		@Override
 		public void run() {
+			do {
+				getData();
 
+				boolean isAutoUpdate = Utils.readAutoRefreshPreference(getApplicationContext());
+
+				Log.d(TAG, "--------------------------------------check------------------------------------:" + isAutoUpdate);
+				if (isAutoUpdate) {
+					try {
+						int time = Utils.readAutoRefreshTimePreference(getApplicationContext());
+						Log.d(TAG, "--------------------------------------time------------------------------------:" + time);
+						Thread.sleep(time);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			} while (Utils.readAutoRefreshPreference(getApplicationContext()));
+		}
+
+		private void getData() {
+			long a = System.currentTimeMillis();
+			for (int i = 0; i < mRssUrls.size(); i++) {
+				mDataList.add(getXml(mRssUrls.get(i)));
+				insertContentData(i);
+			}
+			long b = System.currentTimeMillis();
+			Log.d(TAG, "time:" + (b - a));
+			for (int i = 0; i < mRssUrls.size(); i++) {
+				for (int j = 0; j < mDataList.get(i).size(); j++) {
+					downloadImage(mDataList.get(i).get(j).getImgUrl());
+				}
+			}
 		}
 	}
 }
