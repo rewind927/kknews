@@ -2,6 +2,7 @@ package com.kknews.fragment;
 
 import android.app.DialogFragment;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -28,8 +29,9 @@ import java.util.ArrayList;
  */
 public class EditDialogFragment extends DialogFragment {
 
-	public static int EDIT_MODE = 0;
-	public static int ADD_MODE = 1;
+	public static final int EDIT_MODE = 0;
+	public static final int ADD_MODE = 1;
+	public static final int NEW_MODE = 2;
 
 	private Button mButtonCancel;
 	private Button mButtonOk;
@@ -46,12 +48,13 @@ public class EditDialogFragment extends DialogFragment {
 
 	private int mType = EDIT_MODE;
 
-	static EditDialogFragment newInstance(String editText, ArrayList<String> dataList) {
+	static EditDialogFragment newInstance(int type, String editText, ArrayList<String> dataList) {
 		EditDialogFragment fragment = new EditDialogFragment();
 
 		Bundle args = new Bundle();
 		args.putString(Def.PASS_EDIT_TEXT_KEY, editText);
 		args.putStringArrayList(Def.PASS_THUMB_NAME_KEY, dataList);
+		args.putInt(Def.PASS_DIALOG_TYPE, type);
 		fragment.setArguments(args);
 
 		return fragment;
@@ -202,7 +205,10 @@ public class EditDialogFragment extends DialogFragment {
 			}
 
 			if (mThumbDataList != null) {
-				holder.imageThumb.setImageBitmap(Utils.getBitmapFromInternal(getActivity(), mThumbDataList.get(position)));
+				Bitmap bitmap = Utils.getBitmapFromInternal(getActivity(), mThumbDataList.get(position));
+				if (bitmap != null) {
+					holder.imageThumb.setImageBitmap(bitmap);
+				}
 				if (selectedId == position) {
 					holder.imageThumb.setBorderColor(Color.GREEN);
 				} else {
@@ -233,6 +239,11 @@ public class EditDialogFragment extends DialogFragment {
 			inputTitleId = R.string.add_to_favorite;
 			fileTitleId = R.string.choose_file_title;
 			okId = R.string.add;
+		} else if (mType == NEW_MODE) {
+			titleId = R.string.new_file_in_favorite;
+			inputTitleId = R.string.new_file_hint;
+			fileTitleId = R.string.choose_file_img;
+			okId = R.string.new_file;
 		}
 		getDialog().setTitle(titleId);
 		mTextInputTitle.setText(inputTitleId);

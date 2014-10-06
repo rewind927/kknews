@@ -26,6 +26,7 @@
 
 	<string name="new_file_hint">請輸入新增資料夾名稱</string>
 	<string name="choose_file_title">請選擇要加入的資料夾</string>
+	<string name="choose_file_img">請選擇資料夾封面圖片</string>
 
 	<string name="cancel">取消</string>
 	<string name="add">加入</string>

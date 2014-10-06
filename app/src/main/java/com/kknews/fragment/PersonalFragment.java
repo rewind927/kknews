@@ -73,7 +73,7 @@ public class PersonalFragment extends Fragment {
 		View view = inflater.inflate(R.layout.layout_personal, container, false);
 		mLayoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
-		((MyActivity)getActivity()).setDrawerIndicatorEnable(true);
+		((MyActivity) getActivity()).setDrawerIndicatorEnable(true);
 		mGridViewShowCategory = (GridView) view.findViewById(R.id.gridview_show_category);
 		mCateGoryAdapter = new CategoryAdapter(getActivity());
 		mGridViewShowCategory.setAdapter(mCateGoryAdapter);
@@ -362,11 +362,26 @@ public class PersonalFragment extends Fragment {
 		return cursor;
 	}
 
-	private ArrayList<String> parseThumbList(Cursor cursor) {
+	private Cursor getContentCursorFromDB() {
+		Cursor cursor = mDB.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_THUMBNAIL + " FROM " + NewsContentDBHelper
+				.TABLE_KKEWNS_CONTENT + "" +
+				" ;", null);
+		cursor.moveToFirst();
+		while (!cursor.isAfterLast()) {
+			Log.d(TAG, "thumbnail:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
+			cursor.moveToNext();
+		}
+		return cursor;
+	}
+
+	private ArrayList<String> parseThumbList(Cursor cursor, boolean encode) {
 		ArrayList<String> imageList = new ArrayList<String>();
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
 			String thumbName = cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL));
+			if (encode) {
+				thumbName = Utils.encodeBase64(thumbName);
+			}
 			imageList.add(thumbName);
 			cursor.moveToNext();
 		}
@@ -382,7 +397,8 @@ public class PersonalFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		final NewFileInFavoriteDialogFragment newFragment = NewFileInFavoriteDialogFragment.newInstance();
+		ArrayList<String> imageList = parseThumbList(getContentCursorFromDB(), true);
+		final EditDialogFragment newFragment = EditDialogFragment.newInstance(EditDialogFragment.NEW_MODE, "", imageList);
 
 		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
 		newFragment.setCallBack(new DialogClickListener() {
@@ -397,7 +413,7 @@ public class PersonalFragment extends Fragment {
 				if (fileName == null || fileName.equals("")) {
 					return;
 				}
-				insertCategoryData(fileName, "");
+				insertCategoryData(fileName, newFragment.getThumbName());
 				updateData();
 				mCateGoryAdapter.notifyDataSetChanged();
 
@@ -414,8 +430,8 @@ public class PersonalFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		ArrayList<String> imageList = parseThumbList(getCategoryContentCursorFromDB(title));
-		final EditDialogFragment newFragment = EditDialogFragment.newInstance(title, imageList);
+		ArrayList<String> imageList = parseThumbList(getCategoryContentCursorFromDB(title), false);
+		final EditDialogFragment newFragment = EditDialogFragment.newInstance(EditDialogFragment.EDIT_MODE,title, imageList);
 
 		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
 		newFragment.setCallBack(new DialogClickListener() {
