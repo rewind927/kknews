@@ -31,7 +31,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
 import com.kknews.activity.MyActivity;
@@ -131,6 +130,15 @@ public class PersonalContentFragment extends Fragment {
 					}
 				}
 
+			}
+		});
+		mListViewHotContent.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+			@Override
+			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+				if (!mMultiSelectMode) {
+					showInsertDialog(mTitle, position);
+				}
+				return false;
 			}
 		});
 
@@ -358,7 +366,6 @@ public class PersonalContentFragment extends Fragment {
 		exitAlertDialog.setPositiveButton(getString(R.string.delete), new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				Toast.makeText(getActivity(), "delete", Toast.LENGTH_SHORT).show();
 				mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
 				deleteSelectContent(checkList);
 				parseData(getDataCursorFromDB());
@@ -377,6 +384,39 @@ public class PersonalContentFragment extends Fragment {
 						+ "' AND " + NewsContentDBHelper.COLUMN_FILE + " = " + "'" + mTitle + "'", null);
 			}
 		}
+	}
+
+	private void showInsertDialog(String title, final int position) {
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+		if (prev != null) {
+			ft.remove(prev);
+		}
+		ft.addToBackStack(null);
+
+		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(mDB);
+
+		ArrayList<String> imageList = NewsContentDBHelper.parseThumbList(cursor);
+		ArrayList<String> titleList = NewsContentDBHelper.parseCategoryNameList(cursor);
+
+		final EditDialogFragment newFragment = EditDialogFragment.newInstance(EditDialogFragment.ADD_MODE, title, imageList, titleList);
+
+		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
+
+		newFragment.setCallBack(new DialogClickListener() {
+			@Override
+			public void onCancelClick() {
+
+			}
+
+			@Override
+			public void onOkClick() {
+				insertContentData(position, newFragment.getSelectFileName());
+				insertCategoryData(newFragment.getSelectFileName(), mDataList.get(position).getImgUrl());
+
+				sendCategoryUIRefresh();
+			}
+		});
 	}
 
 	private void showMutliInsertDialog(String title, final SparseBooleanArray checkItemList) {
