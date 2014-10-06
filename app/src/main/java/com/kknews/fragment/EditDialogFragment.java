@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
 import com.kknews.callback.DialogClickListener;
@@ -119,6 +120,12 @@ public class EditDialogFragment extends DialogFragment {
 		mButtonOk.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				if (mType == NEW_MODE) {
+					if (mCategoryAdapter.selectedId == -1) {
+						Toast.makeText(getActivity(), getString(R.string.please_select_img), Toast.LENGTH_SHORT).show();
+						return;
+					}
+				}
 				callback.onOkClick();
 				dismiss();
 			}

@@ -177,11 +177,11 @@ public class PersonalFragment extends Fragment {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.action_delete_file:
-				Log.d(TAG, "action_add_my_favorite");
+				mGridViewShowCategory.clearChoices();
+				mCateGoryAdapter.getSelectIds().clear();
 				mGridViewShowCategory.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 				mMultiSelectMode = true;
 				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
-				//((MyActivity) getActivity()).setTabHostVisible(View.GONE);
 				return true;
 			case R.id.action_add_file:
 				showAddFileDialog();
@@ -301,7 +301,6 @@ public class PersonalFragment extends Fragment {
 
 					mCateGoryAdapter.getSelectIds().clear();
 					mCateGoryAdapter.notifyDataSetChanged();
-					//((MyActivity) getActivity()).setTabHostVisible(View.VISIBLE);
 					break;
 			}
 		}
