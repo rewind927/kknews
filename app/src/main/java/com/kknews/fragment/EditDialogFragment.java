@@ -88,8 +88,6 @@ public class EditDialogFragment extends DialogFragment {
 
 		mType = getArguments().getInt(Def.PASS_DIALOG_TYPE);
 
-		setDialogLayoutByType();
-
 		mCategoryAdapter = new CategoryAdapter(getActivity());
 		mGridCategoryImg = (GridView) v.findViewById(R.id.gridview_show_category_img);
 		mGridCategoryImg.setAdapter(mCategoryAdapter);
@@ -122,6 +120,8 @@ public class EditDialogFragment extends DialogFragment {
 				dismiss();
 			}
 		});
+
+		setDialogLayoutByType();
 
 		return v;
 	}
@@ -226,15 +226,18 @@ public class EditDialogFragment extends DialogFragment {
 		int titleId = R.string.edit_favorite_file_name;
 		int inputTitleId = R.string.edit_favorite_file_name_title;
 		int fileTitleId = R.string.edit_favorite_file_image_name_title;
+		int okId = R.string.edit;
 
 		if (mType == ADD_MODE) {
 			titleId = R.string.add_to_favorite;
 			inputTitleId = R.string.add_to_favorite;
 			fileTitleId = R.string.choose_file_title;
+			okId = R.string.add;
 		}
 		getDialog().setTitle(titleId);
 		mTextInputTitle.setText(inputTitleId);
 		mTextFileTitle.setText(fileTitleId);
+		mButtonOk.setText(okId);
 
 	}
 }

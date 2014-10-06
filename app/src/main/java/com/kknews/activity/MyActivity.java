@@ -91,7 +91,7 @@ public class MyActivity extends FragmentActivity {
 					setDrawerIndicatorEnable(true);
 				} else {
 					if (mDrawerToggle.onOptionsItemSelected(item)) {
-						return true;
+						return false;
 					}
 				}
 				break;

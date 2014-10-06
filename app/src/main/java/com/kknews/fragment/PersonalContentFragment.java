@@ -387,9 +387,15 @@ public class PersonalContentFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		final AddToMyFavoriteDialogFragment newFragment = AddToMyFavoriteDialogFragment.newInstance(mTitle, title);
+		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(mDB);
+
+		ArrayList<String> imageList = NewsContentDBHelper.parseThumbList(cursor);
+		ArrayList<String> titleList = NewsContentDBHelper.parseCategoryNameList(cursor);
+
+		final EditDialogFragment newFragment = EditDialogFragment.newInstance(EditDialogFragment.ADD_MODE, title, imageList, titleList);
 
 		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
+
 		newFragment.setCallBack(new DialogClickListener() {
 			@Override
 			public void onCancelClick() {
@@ -406,12 +412,13 @@ public class PersonalContentFragment extends Fragment {
 					if (checkItemList.get(i)) {
 						lastCheckPosition = i;
 						Log.d(TAG, i + ":check ok");
-						insertContentData(i, newFragment.getFileName());
-						sendCategoryUIRefresh();
+						insertContentData(i, newFragment.getSelectFileName());
 					}
 				}
 
-				insertCategoryData(newFragment.getFileName(), mDataList.get(lastCheckPosition).getImgUrl());
+				insertCategoryData(newFragment.getSelectFileName(), mDataList.get(lastCheckPosition).getImgUrl());
+
+				sendCategoryUIRefresh();
 
 				if (checkItemList != null) {
 					checkItemList.clear();
