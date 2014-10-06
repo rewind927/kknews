@@ -128,7 +128,8 @@ public class HotContentFragment extends Fragment {
 			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 				if (!mMultiSelectMode) {
 					ViewHolder viewHolder = (ViewHolder) view.getTag();
-					showDialog(viewHolder.textTitle.getText().toString(), position);
+					//showDialog(viewHolder.textTitle.getText().toString(), position);
+					showDialog(mTitle, position);
 				}
 				return false;
 			}
@@ -201,9 +202,9 @@ public class HotContentFragment extends Fragment {
 		inflater.inflate(R.menu.action_menu, menu);
 		if (menu != null) {
 			menu.findItem(R.id.action_add_my_favorite).setVisible(true);
-
 			menu.findItem(R.id.action_add_file).setVisible(false);
 			menu.findItem(R.id.action_delete_file).setVisible(false);
+			menu.findItem(R.id.action_delete_item).setVisible(false);
 		}
 	}
 
@@ -397,7 +398,7 @@ public class HotContentFragment extends Fragment {
 					if (mDB != null) {
 						SparseBooleanArray checkItemList;
 						checkItemList = mListViewHotContent.getCheckedItemPositions().clone();
-						showMutliInsertDialog(mTitle, checkItemList);
+						showMultiInsertDialog(mTitle, checkItemList);
 					}
 				case R.id.button_multi_select_cancel:
 					mMultiSelectMode = false;
@@ -430,7 +431,8 @@ public class HotContentFragment extends Fragment {
 		}
 	};
 
-	private void showMutliInsertDialog(String title, final SparseBooleanArray checkItemList) {
+	private void showMultiInsertDialog(String title, final SparseBooleanArray checkItemList) {
+
 		FragmentTransaction ft = getFragmentManager().beginTransaction();
 		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
 		if (prev != null) {
@@ -438,7 +440,12 @@ public class HotContentFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		final AddToMyFavoriteDialogFragment newFragment = AddToMyFavoriteDialogFragment.newInstance(mTitle, title);
+		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(mDB);
+
+		ArrayList<String> imageList = NewsContentDBHelper.parseThumbList(cursor);
+		ArrayList<String> titleList = NewsContentDBHelper.parseCategoryNameList(cursor);
+
+		final EditDialogFragment newFragment = EditDialogFragment.newInstance(EditDialogFragment.ADD_MODE, title, imageList, titleList);
 
 		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
 		newFragment.setCallBack(new DialogClickListener() {
@@ -451,21 +458,23 @@ public class HotContentFragment extends Fragment {
 
 			@Override
 			public void onOkClick() {
+
 				int listSize = mListViewHotContent.getCount();
 				int lastCheckPosition = 0;
 				for (int i = 0; i < listSize; i++) {
 					if (checkItemList.get(i)) {
 						lastCheckPosition = i;
 						Log.d(TAG, i + ":check ok");
-						insertContentData(i, newFragment.getFileName());
+						insertContentData(i, newFragment.getSelectFileName());
 					}
 				}
 
-				insertCategoryData(newFragment.getFileName(), Utils.encodeBase64(mDataList.get(lastCheckPosition).getImgUrl()));
+				insertCategoryData(newFragment.getSelectFileName(), Utils.encodeBase64(mDataList.get(lastCheckPosition).getImgUrl()));
 
 				if (checkItemList != null) {
 					checkItemList.clear();
 				}
+
 			}
 		});
 	}
@@ -479,9 +488,15 @@ public class HotContentFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		final AddToMyFavoriteDialogFragment newFragment = AddToMyFavoriteDialogFragment.newInstance(mTitle, title);
+		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(mDB);
+
+		ArrayList<String> imageList = NewsContentDBHelper.parseThumbList(cursor);
+		ArrayList<String> titleList = NewsContentDBHelper.parseCategoryNameList(cursor);
+
+		final EditDialogFragment newFragment = EditDialogFragment.newInstance(EditDialogFragment.ADD_MODE, title, imageList, titleList);
 
 		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
+
 		newFragment.setCallBack(new DialogClickListener() {
 			@Override
 			public void onCancelClick() {
@@ -490,9 +505,8 @@ public class HotContentFragment extends Fragment {
 
 			@Override
 			public void onOkClick() {
-				insertContentData(position, newFragment.getFileName());
-				insertCategoryData(newFragment.getFileName(), Utils.encodeBase64(mDataList.get(position).getImgUrl()));
-
+				insertContentData(position, newFragment.getSelectFileName());
+				insertCategoryData(newFragment.getSelectFileName(), Utils.encodeBase64(mDataList.get(position).getImgUrl()));
 			}
 		});
 	}

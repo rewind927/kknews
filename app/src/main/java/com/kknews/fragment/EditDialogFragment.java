@@ -13,6 +13,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.TextView;
 
 import com.example.ryanwang.helloworld.R;
 import com.kknews.callback.DialogClickListener;
@@ -27,15 +28,23 @@ import java.util.ArrayList;
  */
 public class EditDialogFragment extends DialogFragment {
 
+	public static int EDIT_MODE = 0;
+	public static int ADD_MODE = 1;
+
 	private Button mButtonCancel;
 	private Button mButtonOk;
 	private EditText mTextInputFileName;
 	private DialogClickListener callback;
+	private TextView mTextInputTitle;
+	private TextView mTextFileTitle;
 
 	private GridView mGridCategoryImg;
 	private CategoryAdapter mCategoryAdapter;
 
-	private ArrayList<String> mDataList;
+	private ArrayList<String> mThumbDataList;
+	private ArrayList<String> mCategoryTitleDataList;
+
+	private int mType = EDIT_MODE;
 
 	static EditDialogFragment newInstance(String editText, ArrayList<String> dataList) {
 		EditDialogFragment fragment = new EditDialogFragment();
@@ -48,18 +57,38 @@ public class EditDialogFragment extends DialogFragment {
 		return fragment;
 	}
 
+	static EditDialogFragment newInstance(int type, String editText, ArrayList<String> thumbList,
+	                                      ArrayList<String> categoryTitleDataList) {
+		EditDialogFragment fragment = new EditDialogFragment();
+
+		Bundle args = new Bundle();
+		args.putString(Def.PASS_EDIT_TEXT_KEY, editText);
+		args.putStringArrayList(Def.PASS_THUMB_NAME_KEY, thumbList);
+		args.putStringArrayList(Def.PASS_CATEGORY_TITLE_KEY, categoryTitleDataList);
+		args.putInt(Def.PASS_DIALOG_TYPE, type);
+		fragment.setArguments(args);
+
+		return fragment;
+	}
+
 	@Nullable
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-		getDialog().setTitle(R.string.edit_favorite_file_name);
 
 		View v = inflater.inflate(R.layout.layout_edit_file_dialog, container, false);
 
 		mTextInputFileName = (EditText) v.findViewById(R.id.text_input_file_name);
 		mTextInputFileName.setText(getArguments().getString(Def.PASS_EDIT_TEXT_KEY));
 
-		mDataList = getArguments().getStringArrayList(Def.PASS_THUMB_NAME_KEY);
+		mThumbDataList = getArguments().getStringArrayList(Def.PASS_THUMB_NAME_KEY);
+		mCategoryTitleDataList = getArguments().getStringArrayList(Def.PASS_CATEGORY_TITLE_KEY);
+
+		mTextInputTitle = (TextView) v.findViewById(R.id.text_input_title);
+		mTextFileTitle = (TextView) v.findViewById(R.id.text_change_img_title);
+
+		mType = getArguments().getInt(Def.PASS_DIALOG_TYPE);
+
+		setDialogLayoutByType();
 
 		mCategoryAdapter = new CategoryAdapter(getActivity());
 		mGridCategoryImg = (GridView) v.findViewById(R.id.gridview_show_category_img);
@@ -105,15 +134,22 @@ public class EditDialogFragment extends DialogFragment {
 		return mTextInputFileName.getText().toString();
 	}
 
-	public void setDataList(ArrayList<String> dataList) {
-		this.mDataList = dataList;
+	public String getSelectFileName() {
+		if (mCategoryAdapter.selectedId == -1) {
+			return mTextInputFileName.getText().toString();
+		}
+		return mCategoryTitleDataList.get(mCategoryAdapter.selectedId);
 	}
 
-	public String getThumbName(){
+	public void setDataList(ArrayList<String> dataList) {
+		this.mThumbDataList = dataList;
+	}
+
+	public String getThumbName() {
 		if (mCategoryAdapter.selectedId == -1) {
 			return null;
 		}
-		return mDataList.get(mCategoryAdapter.selectedId);
+		return mThumbDataList.get(mCategoryAdapter.selectedId);
 	}
 
 	class CategoryAdapter extends BaseAdapter {
@@ -127,8 +163,8 @@ public class EditDialogFragment extends DialogFragment {
 
 		@Override
 		public int getCount() {
-			if (mDataList != null) {
-				return mDataList.size();
+			if (mThumbDataList != null) {
+				return mThumbDataList.size();
 			}
 			return 0;
 		}
@@ -150,17 +186,23 @@ public class EditDialogFragment extends DialogFragment {
 			if (convertView == null) {
 				holder = new ViewHolder();
 				convertView = inflater.inflate(R.layout.layout_category_item, null);
-				//holder.textTitle = (TextView) convertView.findViewById(R.id.text_category_name);
+				holder.textTitle = (TextView) convertView.findViewById(R.id.text_category_name);
+				if (mCategoryTitleDataList == null) {
+					holder.textTitle.setVisibility(View.GONE);
+				}
+
 				holder.imageThumb = (CircularImageView) convertView.findViewById(R.id.image_thumb);
 				convertView.setTag(holder);
 			} else {
 				holder = (ViewHolder) convertView.getTag();
 			}
 
-			if (mDataList != null) {
-				//holder.textTitle.setText(mDataList.get(position).getCategory());
-				holder.imageThumb.setImageBitmap(Utils.getBitmapFromInternal(getActivity(), mDataList.get(position)));
+			if (mCategoryTitleDataList != null) {
+				holder.textTitle.setText(mCategoryTitleDataList.get(position));
+			}
 
+			if (mThumbDataList != null) {
+				holder.imageThumb.setImageBitmap(Utils.getBitmapFromInternal(getActivity(), mThumbDataList.get(position)));
 				if (selectedId == position) {
 					holder.imageThumb.setBorderColor(Color.GREEN);
 				} else {
@@ -177,6 +219,22 @@ public class EditDialogFragment extends DialogFragment {
 	class ViewHolder {
 		int position;
 		CircularImageView imageThumb;
-		//TextView textTitle;
+		TextView textTitle;
+	}
+
+	public void setDialogLayoutByType() {
+		int titleId = R.string.edit_favorite_file_name;
+		int inputTitleId = R.string.edit_favorite_file_name_title;
+		int fileTitleId = R.string.edit_favorite_file_image_name_title;
+
+		if (mType == ADD_MODE) {
+			titleId = R.string.add_to_favorite;
+			inputTitleId = R.string.add_to_favorite;
+			fileTitleId = R.string.choose_file_title;
+		}
+		getDialog().setTitle(titleId);
+		mTextInputTitle.setText(inputTitleId);
+		mTextFileTitle.setText(fileTitleId);
+
 	}
 }

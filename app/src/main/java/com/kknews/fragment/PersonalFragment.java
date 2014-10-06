@@ -1,7 +1,10 @@
 package com.kknews.fragment;
 
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
@@ -61,6 +64,8 @@ public class PersonalFragment extends Fragment {
 	private SQLiteDatabase mDB;
 
 	private boolean mMultiSelectMode = false;
+
+	private UpdateUIReceiver mUpdateUiReceiver;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -124,6 +129,8 @@ public class PersonalFragment extends Fragment {
 		mDB = mDbHelper.getWritableDatabase();
 		getCategoryCursorFromDB();
 
+		mUpdateUiReceiver = new UpdateUIReceiver();
+
 		super.onCreate(savedInstanceState);
 	}
 
@@ -131,6 +138,10 @@ public class PersonalFragment extends Fragment {
 	public void onStart() {
 		Log.d(TAG, "onStart()");
 		super.onStart();
+
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Def.ACTION_REFRESH_UI);
+		getActivity().registerReceiver(mUpdateUiReceiver, filter);
 
 		parseData(getCategoryCursorFromDB());
 		mCateGoryAdapter.notifyDataSetChanged();
@@ -143,15 +154,22 @@ public class PersonalFragment extends Fragment {
 	}
 
 	@Override
+	public void onStop() {
+		super.onStop();
+
+		getActivity().unregisterReceiver(mUpdateUiReceiver);
+	}
+
+	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.action_menu, menu);
 		if (menu != null) {
 			menu.findItem(R.id.action_add_my_favorite).setVisible(false);
-
 			menu.findItem(R.id.action_add_file).setVisible(true);
 			menu.findItem(R.id.action_delete_file).setVisible(true);
+			menu.findItem(R.id.action_delete_item).setVisible(false);
 		}
-		super.onCreateOptionsMenu(menu,inflater);
+		super.onCreateOptionsMenu(menu, inflater);
 	}
 
 	@Override
@@ -163,15 +181,14 @@ public class PersonalFragment extends Fragment {
 				mMultiSelectMode = true;
 				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
 				((MyActivity) getActivity()).setTabHostVisible(View.GONE);
-				break;
+				return true;
 			case R.id.action_add_file:
 				showAddFileDialog();
-				break;
-
+				return true;
 			default:
 				break;
 		}
-		return true;
+		return false;
 	}
 
 	@Override
@@ -428,9 +445,10 @@ public class PersonalFragment extends Fragment {
 			values.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbName);
 		}
 		values.put(NewsContentDBHelper.COLUMN_FILE, replaceTitle);
-		try{
-			mDB.update(NewsContentDBHelper.TABLE_CATEGORY, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'", null);
-		}catch (SQLiteConstraintException exception){
+		try {
+			mDB.update(NewsContentDBHelper.TABLE_CATEGORY, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'",
+					null);
+		} catch (SQLiteConstraintException exception) {
 			deleteCategory(originalTitle);
 		}
 	}
@@ -438,9 +456,10 @@ public class PersonalFragment extends Fragment {
 	private void updateContentCategory(String originalTitle, String replaceTitle) {
 		ContentValues values = new ContentValues();
 		values.put(NewsContentDBHelper.COLUMN_FILE, replaceTitle);
-		try{
-			mDB.update(NewsContentDBHelper.TABLE_CONTENT, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'", null);
-		}catch (SQLiteConstraintException exception){
+		try {
+			mDB.update(NewsContentDBHelper.TABLE_CONTENT, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'",
+					null);
+		} catch (SQLiteConstraintException exception) {
 			//deleteContent();
 		}
 	}
@@ -461,5 +480,16 @@ public class PersonalFragment extends Fragment {
 		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
 		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbFileName);
 		mDB.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
+	}
+
+	class UpdateUIReceiver extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+
+			parseData(getCategoryCursorFromDB());
+			mCateGoryAdapter.notifyDataSetChanged();
+
+		}
 	}
 }

@@ -16,6 +16,7 @@
 	<string name="action_add_file">新增資料夾</string>
 	<string name="action_delete_file">刪除資料夾</string>
 	<string name="action_add_my_favorite">加到我的最愛</string>
+	<string name="action_delete_my_favorite">刪除我的最愛</string>
 
 	<string name="add_to_favorite">加入個人精選</string>
 	<string name="new_file_in_favorite">新增資料夾</string>
@@ -24,6 +25,7 @@
 	<string name="edit_favorite_file_image_name_title">修改資料夾圖像</string>
 
 	<string name="new_file_hint">請輸入新增資料夾名稱</string>
+	<string name="choose_file_title">請選擇要加入的資料夾</string>
 
 	<string name="cancel">取消</string>
 	<string name="add">加入</string>

@@ -1,7 +1,11 @@
 package com.kknews.fragment;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -9,9 +13,11 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,11 +26,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
+import com.kknews.callback.DialogClickListener;
 import com.kknews.data.ContentDataObject;
 import com.kknews.database.NewsContentDBHelper;
 import com.kknews.util.Def;
@@ -40,10 +50,14 @@ public class PersonalContentFragment extends Fragment {
 	public final static String TAG = "PersonalContentFragment";
 
 	//view
+	private LinearLayout mLayoutMultiSelectButtonGroup;
+	private Button mButtonMultiSelectOk;
+	private Button mButtonMultiSelectCancel;
 	private ListView mListViewHotContent;
 	private HotEntryAdapter mAdapterHotEntry;
 
 	private boolean mMultiSelectMode = false;
+	private boolean mAddMode = false; // true: add , false: delete
 
 	private String mTitle;
 
@@ -68,8 +82,6 @@ public class PersonalContentFragment extends Fragment {
 		Bundle bundle = this.getArguments();
 		mTitle = bundle.getString(Def.PASS_TITLE_KEY, null);
 
-
-
 	}
 
 	@Override
@@ -83,6 +95,12 @@ public class PersonalContentFragment extends Fragment {
 
 		setHasOptionsMenu(true);
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+
+		mLayoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
+		mButtonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);
+		mButtonMultiSelectCancel = (Button) view.findViewById(R.id.button_multi_select_cancel);
+		mButtonMultiSelectOk.setOnClickListener(mClickMultiSelectListener);
+		mButtonMultiSelectCancel.setOnClickListener(mClickMultiSelectListener);
 
 		mListViewHotContent = (ListView) view.findViewById(R.id.listview_hot_content);
 		mAdapterHotEntry = new HotEntryAdapter(getActivity());
@@ -148,26 +166,38 @@ public class PersonalContentFragment extends Fragment {
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		//inflater.inflate(R.menu.action_menu, menu);
+		menu.clear();
+		inflater.inflate(R.menu.action_menu, menu);
 		if (menu != null) {
-			menu.findItem(R.id.action_add_my_favorite).setVisible(false);
+			menu.findItem(R.id.action_add_my_favorite).setVisible(true);
 			menu.findItem(R.id.action_add_file).setVisible(false);
 			menu.findItem(R.id.action_delete_file).setVisible(false);
+			menu.findItem(R.id.action_delete_item).setVisible(true);
 		}
-		super.onCreateOptionsMenu(menu,inflater);
+		super.onCreateOptionsMenu(menu, inflater);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		Log.d("123","here---------------------------------------------------------------------------------");
 		switch (item.getItemId()) {
-			case android.R.id.home:
-				getActivity().onBackPressed();
-				break;
+			case R.id.action_delete_item:
+				mListViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+				mMultiSelectMode = true;
+				mAddMode = false;
+				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
+				mButtonMultiSelectOk.setText(getString(R.string.delete));
+				return true;
+			case R.id.action_add_my_favorite:
+				mListViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+				mMultiSelectMode = true;
+				mAddMode = true;
+				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
+				mButtonMultiSelectOk.setText(getString(R.string.add));
+				return true;
 			default:
 				break;
 		}
-		return true;
+		return false;
 	}
 
 	class HotEntryAdapter extends BaseAdapter {
@@ -283,5 +313,134 @@ public class PersonalContentFragment extends Fragment {
 			cursor.moveToNext();
 		}
 		return cursor;
+	}
+
+	private View.OnClickListener mClickMultiSelectListener = new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			switch (v.getId()) {
+				case R.id.button_multi_select_ok:
+					if (mDB != null) {
+						SparseBooleanArray checkItemList;
+						checkItemList = mListViewHotContent.getCheckedItemPositions().clone();
+						if (mAddMode) {
+							showMutliInsertDialog(mTitle, checkItemList);
+						} else {
+							showDeleteContentDialog(checkItemList);
+						}
+					}
+				case R.id.button_multi_select_cancel:
+					mMultiSelectMode = false;
+					mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
+
+					mListViewHotContent.clearChoices();
+
+					mAdapterHotEntry.getSelectIds().clear();
+					mAdapterHotEntry.notifyDataSetChanged();
+					break;
+			}
+		}
+	};
+
+	private void showDeleteContentDialog(final SparseBooleanArray checkList) {
+		AlertDialog.Builder exitAlertDialog = new AlertDialog.Builder(getActivity());
+		exitAlertDialog.setTitle(getString(R.string.action_delete_my_favorite));
+		exitAlertDialog.setMessage(getString(R.string.action_delete_my_favorite));
+		exitAlertDialog.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
+				checkList.clear();
+			}
+		});
+		exitAlertDialog.setPositiveButton(getString(R.string.delete), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				Toast.makeText(getActivity(), "delete", Toast.LENGTH_SHORT).show();
+				mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
+				deleteSelectContent(checkList);
+				parseData(getDataCursorFromDB());
+				mAdapterHotEntry.notifyDataSetChanged();
+				checkList.clear();
+			}
+		});
+		exitAlertDialog.show();
+	}
+
+	private void deleteSelectContent(SparseBooleanArray checkItemList) {
+		int listSize = mListViewHotContent.getCount();
+		for (int i = 0; i < listSize; i++) {
+			if (checkItemList.get(i)) {
+				mDB.delete(NewsContentDBHelper.TABLE_CONTENT, NewsContentDBHelper.COLUMN_TITLE + " = " + "'" + mDataList.get(i).getTitle()
+						+ "' AND " + NewsContentDBHelper.COLUMN_FILE + " = " + "'" + mTitle + "'", null);
+			}
+		}
+	}
+
+	private void showMutliInsertDialog(String title, final SparseBooleanArray checkItemList) {
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+		if (prev != null) {
+			ft.remove(prev);
+		}
+		ft.addToBackStack(null);
+
+		final AddToMyFavoriteDialogFragment newFragment = AddToMyFavoriteDialogFragment.newInstance(mTitle, title);
+
+		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
+		newFragment.setCallBack(new DialogClickListener() {
+			@Override
+			public void onCancelClick() {
+				if (checkItemList != null) {
+					checkItemList.clear();
+				}
+			}
+
+			@Override
+			public void onOkClick() {
+				int listSize = mListViewHotContent.getCount();
+				int lastCheckPosition = 0;
+				for (int i = 0; i < listSize; i++) {
+					if (checkItemList.get(i)) {
+						lastCheckPosition = i;
+						Log.d(TAG, i + ":check ok");
+						insertContentData(i, newFragment.getFileName());
+						sendCategoryUIRefresh();
+					}
+				}
+
+				insertCategoryData(newFragment.getFileName(), mDataList.get(lastCheckPosition).getImgUrl());
+
+				if (checkItemList != null) {
+					checkItemList.clear();
+				}
+			}
+		});
+	}
+
+	private void insertCategoryData(String fileName, String thumbFileName) {
+		ContentValues value = new ContentValues();
+		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
+		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbFileName);
+		mDB.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
+	}
+
+	private void insertContentData(int position, String fileName) {
+		ContentDataObject data = mDataList.get(position);
+		ContentValues value = new ContentValues();
+		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
+		value.put(NewsContentDBHelper.COLUMN_CATEGORY, data.getCategory());
+		value.put(NewsContentDBHelper.COLUMN_DATE, data.getDate());
+		value.put(NewsContentDBHelper.COLUMN_DESCRIPTION, data.getDescription());
+		value.put(NewsContentDBHelper.COLUMN_TITLE, data.getTitle());
+		value.put(NewsContentDBHelper.COLUMN_URL, data.getLink());
+		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, data.getImgUrl());
+		mDB.insert(NewsContentDBHelper.TABLE_CONTENT, null, value);
+	}
+
+	private void sendCategoryUIRefresh( ) {
+		Intent intent = new Intent();
+		intent.setAction(Def.ACTION_REFRESH_UI);
+		getActivity().sendBroadcast(intent);
 	}
 }

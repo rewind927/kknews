@@ -1,8 +1,11 @@
 package com.kknews.database;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import java.util.ArrayList;
 
 /**
  * Created by ryanwang on 2014/9/30.
@@ -58,5 +61,33 @@ public class NewsContentDBHelper extends SQLiteOpenHelper {
 		db.execSQL(SQL_DROP_CATEGORY_TABLE);
 		db.execSQL(SQL_DROP_KKNEWS_CONTENT_TABLE);
 		onCreate(db);
+	}
+
+	public static Cursor getCategoryCursorFromDB(SQLiteDatabase mDB) {
+		Cursor cursor = mDB.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_CATEGORY + ";", null);
+		cursor.moveToFirst();
+		return cursor;
+	}
+
+	public static ArrayList<String> parseThumbList(Cursor cursor) {
+		ArrayList<String> imageList = new ArrayList<String>();
+		cursor.moveToFirst();
+		while (!cursor.isAfterLast()) {
+			String thumbName = cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL));
+			imageList.add(thumbName);
+			cursor.moveToNext();
+		}
+		return imageList;
+	}
+
+	public static ArrayList<String> parseCategoryNameList(Cursor cursor) {
+		ArrayList<String> imageList = new ArrayList<String>();
+		cursor.moveToFirst();
+		while (!cursor.isAfterLast()) {
+			String thumbName = cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_FILE));
+			imageList.add(thumbName);
+			cursor.moveToNext();
+		}
+		return imageList;
 	}
 }
