@@ -1,21 +1,22 @@
 package com.kknews.activity;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TabHost;
-import android.widget.TabHost.TabContentFactory;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import com.example.ryanwang.helloworld.R;
-import com.kknews.adapter.ViewPagerAdapter;
 import com.kknews.fragment.HotFragment;
 import com.kknews.fragment.PersonalFragment;
 import com.kknews.fragment.SettingFragment;
@@ -23,20 +24,20 @@ import com.kknews.fragment.SettingFragment;
 import net.hockeyapp.android.CrashManager;
 import net.hockeyapp.android.UpdateManager;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Vector;
-
-public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeListener, ViewPager.OnPageChangeListener {
+public class MyActivity extends FragmentActivity {
 
 	private static final int HOT_FRAGMENT_TAG = 0;
 	private static final int PERSONAL_FRAGMENT_TAG = 1;
 	private static final int SETTING_FRAGMENT_TAG = 2;
 
-	private TabHost mTabHost;
-	private ViewPager mViewPager;
-	private HashMap<String, TabInfo> mapTabInfo = new HashMap<String, TabInfo>();
-	private ViewPagerAdapter mAdapter;
+	private int currentFragment = HOT_FRAGMENT_TAG;
+
+	private String[] mPlanetTitles = {"嚴選專欄", "個人精選", "設定"};
+
+	//drawer
+	private DrawerLayout mDrawerLayout;
+	private ListView mDrawerList;
+	private ActionBarDrawerToggle mDrawerToggle;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -44,13 +45,32 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 		setContentView(R.layout.activity_my);
 
 		getActionBar().setHomeButtonEnabled(true);
+		getActionBar().setDisplayHomeAsUpEnabled(true);
 
-		initialiseTabHost(savedInstanceState);
-		if (savedInstanceState != null) {
-			mTabHost.setCurrentTabByTag(savedInstanceState.getString("tab")); //set the tab as per the saved state
-		}
-		intialiseViewPager();
+		mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
+		mDrawerToggle = new ActionBarDrawerToggle(
+				this,                  /* host Activity */
+				mDrawerLayout,         /* DrawerLayout object */
+				R.drawable.ic_navigation_drawer,  /* nav drawer icon to replace 'Up' caret */
+				R.string.hot,  /* "open drawer" description */
+				R.string.setting  /* "close drawer" description */
+		) {
+			public void onDrawerClosed(View view) {
+				super.onDrawerClosed(view);
+			}
+
+			public void onDrawerOpened(View drawerView) {
+				super.onDrawerOpened(drawerView);
+			}
+		};
+		mDrawerLayout.setDrawerListener(mDrawerToggle);
+		mDrawerList.setAdapter(new ArrayAdapter<String>(this,
+				R.layout.drawer_list_item, mPlanetTitles));
+		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+
+		initHotFragment();
 	}
 
 	@Override
@@ -61,12 +81,18 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+
 		switch (item.getItemId()) {
 			case android.R.id.home:
-				getActionBar().setDisplayHomeAsUpEnabled(false);
+
 				FragmentManager fm = getSupportFragmentManager();
 				if (fm.getBackStackEntryCount() > 0) {
 					fm.popBackStack();
+					setDrawerIndicatorEnable(true);
+				} else {
+					if (mDrawerToggle.onOptionsItemSelected(item)) {
+						return true;
+					}
 				}
 				break;
 		}
@@ -78,113 +104,30 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 		return super.getMenuInflater();
 	}
 
-	private class TabInfo {
-		private String tag;
-		private Class<?> clss;
-		private Bundle args;
-		private Fragment fragment;
-
-		TabInfo(String tag, Class<?> clazz, Bundle args) {
-			this.tag = tag;
-			this.clss = clazz;
-			this.args = args;
-		}
-	}
-
-	class TabFactory implements TabContentFactory {
-
-		private final Context mContext;
-
-		public TabFactory(Context context) {
-			mContext = context;
-		}
-
-		public View createTabContent(String tag) {
-			View v = new View(mContext);
-			v.setMinimumWidth(0);
-			v.setMinimumHeight(0);
-			return v;
-		}
-
-	}
-
-	private void intialiseViewPager() {
-		List<Fragment> fragments = new Vector<Fragment>();
-		fragments.add(Fragment.instantiate(this, HotFragment.class.getName()));
-		fragments.add(Fragment.instantiate(this, PersonalFragment.class.getName()));
-		fragments.add(Fragment.instantiate(this, SettingFragment.class.getName()));
-		mAdapter = new ViewPagerAdapter(getSupportFragmentManager(), fragments);
-		mViewPager = (ViewPager) findViewById(R.id.pager);
-		mViewPager.setAdapter(mAdapter);
-		mViewPager.setOnPageChangeListener(this);
-	}
-
-	private void initialiseTabHost(Bundle args) {
-		mTabHost = (TabHost) findViewById(android.R.id.tabhost);
-		mTabHost.setup();
-		TabInfo tabInfo = null;
-		AddTab(this, mTabHost, mTabHost.newTabSpec("tab1").setIndicator(getString(R.string.hot)), (tabInfo = new TabInfo("tab1",
-				HotFragment.class, args)));
-		mapTabInfo.put(tabInfo.tag, tabInfo);
-		AddTab(this, mTabHost, mTabHost.newTabSpec("tab2").setIndicator(getString(R.string.personal)), (tabInfo = new TabInfo("tab2",
-				PersonalFragment.class, args)));
-		mapTabInfo.put(tabInfo.tag, tabInfo);
-		AddTab(this, mTabHost, mTabHost.newTabSpec("tab3").setIndicator(getString(R.string.setting)), (tabInfo = new TabInfo("tab3",
-				SettingFragment.class, args)));
-		mapTabInfo.put(tabInfo.tag, tabInfo);
-		mTabHost.setOnTabChangedListener(this);
-	}
-
-	private static void AddTab(MyActivity activity, TabHost tabHost, TabHost.TabSpec tabSpec, TabInfo tabInfo) {
-		// Attach a Tab view factory to the spec
-		tabSpec.setContent(activity.new TabFactory(activity));
-		tabHost.addTab(tabSpec);
-	}
-
-	@Override
-	public void onPageScrolled(int i, float v, int i2) {
-
-	}
-
-	@Override
-	public void onPageSelected(int i) {
-		this.mTabHost.setCurrentTab(i);
-	}
-
-	@Override
-	public void onPageScrollStateChanged(int i) {
-
-	}
-
-	@Override
-	public void onTabChanged(String tag) {
-		int pos = this.mTabHost.getCurrentTab();
-		this.mViewPager.setCurrentItem(pos);
-
-		if (pos == PERSONAL_FRAGMENT_TAG) {
-			((PersonalFragment) mAdapter.getFragments().get(pos)).updateData();
-		}
-	}
-
 	@Override
 	public void onBackPressed() {
-		getActionBar().setDisplayHomeAsUpEnabled(false);
+		getActionBar().setDisplayHomeAsUpEnabled(true);
 		FragmentManager fm = getSupportFragmentManager();
 		if (fm.getBackStackEntryCount() > 0) {
 			super.onBackPressed();
-		}else {
+			setDrawerIndicatorEnable(true);
+		} else {
 			showExitDialog();
 		}
-
 	}
 
-	public void setTabHostVisible(int visible) {
-		if (mTabHost != null) {
-			mTabHost.getTabWidget().setVisibility(visible);
-		}
+	@Override
+	protected void onPostCreate(Bundle savedInstanceState) {
+		super.onPostCreate(savedInstanceState);
+		mDrawerToggle.syncState();
+	}
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		mDrawerToggle.onConfigurationChanged(newConfig);
 	}
 
-	private void showExitDialog(){
+	private void showExitDialog() {
 		AlertDialog.Builder exitAlertDialog = new AlertDialog.Builder(this);
 		exitAlertDialog.setTitle(getString(R.string.exit));
 		exitAlertDialog.setMessage(getString(R.string.exit_description));
@@ -210,6 +153,58 @@ public class MyActivity extends FragmentActivity implements TabHost.OnTabChangeL
 	private void checkForUpdates() {
 		// Remove this for store builds!
 		UpdateManager.register(this, "372550dc8bd683a8457c9f793430ed99");
+	}
+
+	private class DrawerItemClickListener implements ListView.OnItemClickListener {
+		@Override
+		public void onItemClick(AdapterView parent, View view, int position, long id) {
+			selectItem(position);
+		}
+	}
+
+	private void selectItem(int position) {
+		if (currentFragment == position) {
+			mDrawerLayout.closeDrawer(mDrawerList);
+			return;
+		}
+
+		Fragment fragment = null;
+
+		currentFragment = position;
+
+		switch (position) {
+			case HOT_FRAGMENT_TAG:
+				fragment = new HotFragment();
+				break;
+			case PERSONAL_FRAGMENT_TAG:
+				fragment = new PersonalFragment();
+				break;
+			case SETTING_FRAGMENT_TAG:
+				fragment = new SettingFragment();
+				break;
+			default:
+				fragment = new HotFragment();
+				break;
+		}
+		FragmentManager fragmentManager = getSupportFragmentManager();
+		fragmentManager.beginTransaction()
+				.replace(R.id.content_frame, fragment)
+				.commit();
+
+		mDrawerList.setItemChecked(position, true);
+		mDrawerLayout.closeDrawer(mDrawerList);
+	}
+
+	private void initHotFragment() {
+		Fragment fragment = new HotFragment();
+		FragmentManager fragmentManager = getSupportFragmentManager();
+		fragmentManager.beginTransaction()
+				.replace(R.id.content_frame, fragment)
+				.commit();
+	}
+
+	public void setDrawerIndicatorEnable(boolean enable){
+		mDrawerToggle.setDrawerIndicatorEnabled(enable);
 	}
 
 }

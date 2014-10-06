@@ -37,6 +37,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
+import com.kknews.activity.MyActivity;
 import com.kknews.callback.DialogClickListener;
 import com.kknews.data.ContentDataObject;
 import com.kknews.database.NewsContentDBHelper;
@@ -89,6 +90,7 @@ public class HotContentFragment extends Fragment {
 		textHotTitle.setText(mTitle);
 
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+		((MyActivity)getActivity()).setDrawerIndicatorEnable(false);
 
 		mLayoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
 		mButtonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);

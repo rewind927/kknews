@@ -22,6 +22,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.ryanwang.helloworld.R;
+import com.kknews.activity.MyActivity;
 import com.kknews.data.ListDataObject;
 import com.kknews.service.GetMetaDataService;
 import com.kknews.util.Def;
@@ -48,6 +49,8 @@ public class HotFragment extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.layout_hot, container, false);
 
+		((MyActivity)getActivity()).setDrawerIndicatorEnable(true);
+
 		mListViewHotEntry = (ListView) view.findViewById(R.id.listview_hot_entry);
 		mListViewHotEntry.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
@@ -60,7 +63,7 @@ public class HotFragment extends Fragment {
 				bundle.putString(Def.PASS_URL_KEY,mDataList.get(i).getUrl());
 				bundle.putString(Def.PASS_TITLE_KEY,mDataList.get(i).getTitle());
 				fragment.setArguments(bundle);
-				fragmentTransaction.add(R.id.rl_view, fragment);
+				fragmentTransaction.add(R.id.content_frame, fragment);
 				fragmentTransaction.commit();
 
 			}

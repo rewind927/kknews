@@ -13,6 +13,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.example.ryanwang.helloworld.R;
+import com.kknews.activity.MyActivity;
 import com.kknews.util.Def;
 import com.kknews.util.Utils;
 
@@ -36,6 +37,8 @@ public class SettingFragment extends Fragment {
 				Utils.writeAutoRefreshPreference(getActivity(), isChecked);
 			}
 		});
+		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+		((MyActivity)getActivity()).setDrawerIndicatorEnable(true);
 		Spinner spinnerChoiceTime = (Spinner) view.findViewById(R.id.spinner_choice_time);
 		ArrayAdapter spinnerAdapter = new ArrayAdapter<String>(getActivity(),R.layout.layout_spinner, mSpinnerText);
 		spinnerAdapter.setDropDownViewResource(R.layout.layout_spinner);
