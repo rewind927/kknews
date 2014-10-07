@@ -54,4 +54,9 @@
 		<item>10分鐘</item>
 	</string-array>
 
+	<string name="select_all">全選</string>
+	<string name="select_cancel_all">取消全選</string>
+
+	<string name="select">選取</string>
+
 </resources>

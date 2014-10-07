@@ -29,6 +29,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import com.example.ryanwang.helloworld.R;
@@ -70,6 +71,8 @@ public class HotContentFragment extends Fragment {
 	private SQLiteDatabase db;
 	//broadcast
 	private UpdateUIReceiver updateUiReceiver;
+	//menuItem
+	private MenuItem multiSelectMenuItem;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -101,6 +104,7 @@ public class HotContentFragment extends Fragment {
 					} else {
 						adapterHotEntry.getSelectIds().add(pos);
 					}
+					multiSelectMenuItem.setTitle(getString(R.string.select)+adapterHotEntry.getSelectIds().size());
 					adapterHotEntry.notifyDataSetChanged();
 
 				} else {
@@ -189,7 +193,9 @@ public class HotContentFragment extends Fragment {
 			menu.findItem(R.id.action_add_file).setVisible(false);
 			menu.findItem(R.id.action_delete_file).setVisible(false);
 			menu.findItem(R.id.action_delete_item).setVisible(false);
+			multiSelectMenuItem = menu.findItem(R.id.action_multi_select).setVisible(false);
 		}
+
 	}
 
 	@Override
@@ -200,11 +206,44 @@ public class HotContentFragment extends Fragment {
 				listViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 				multiSelectMode = true;
 				layoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
+				multiSelectMenuItem.setVisible(true);
+				break;
+			case R.id.action_multi_select:
+				View menuItemView = getActivity().findViewById(R.id.action_multi_select); // SAME ID AS MENU ID
+				PopupMenu popupMenu = new PopupMenu(getActivity(), menuItemView);
+				popupMenu.inflate(R.menu.multi_select_menu);
+				popupMenu.show();
+				popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+					@Override
+					public boolean onMenuItemClick(MenuItem item) {
+						switch (item.getItemId()) {
+							case R.id.action_select_all:
+								int size = listViewHotContent.getCount();
+								for(int i =0;i<size;i++){
+									listViewHotContent.setItemChecked(i,true);
+									if (!adapterHotEntry.getSelectIds().contains(i)) {
+										adapterHotEntry.getSelectIds().add(i);
+									}
+								}
+								multiSelectMenuItem.setTitle(getString(R.string.select)+ size);
+								break;
+							case R.id.action_select_cancel_all:
+								listViewHotContent.clearChoices();
+								adapterHotEntry.getSelectIds().clear();
+								multiSelectMenuItem.setTitle(getString(R.string.select)+"0");
+								break;
+							default:
+								break;
+						}
+						adapterHotEntry.notifyDataSetChanged();
+						return true;
+					}
+				});
 				break;
 			default:
 				break;
 		}
-		return true;
+		return false;
 	}
 
 	class HotEntryAdapter extends BaseAdapter {
@@ -301,7 +340,7 @@ public class HotContentFragment extends Fragment {
 					layoutMultiSelectButtonGroup.setVisibility(View.GONE);
 
 					listViewHotContent.clearChoices();
-
+					multiSelectMenuItem.setVisible(false);
 					adapterHotEntry.getSelectIds().clear();
 					adapterHotEntry.notifyDataSetChanged();
 					break;

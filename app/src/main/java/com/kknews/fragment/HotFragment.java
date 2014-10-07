@@ -208,7 +208,12 @@ public class HotFragment extends Fragment {
 	Handler mHandler = new Handler(){
 		@Override
 		public void handleMessage(Message msg) {
-			adapterHotEntry = new HotEntryAdapter(getActivity());
+			if (getActivity() == null) {
+				return;
+			}
+			if (adapterHotEntry == null) {
+				adapterHotEntry = new HotEntryAdapter(getActivity());
+			}
 			listViewHotEntry.setAdapter(adapterHotEntry);
 
 			Intent startIntent = new Intent(getActivity(), GetMetaDataService.class);

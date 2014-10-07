@@ -1,0 +1,12 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+	  xmlns:tools="http://schemas.android.com/tools"
+	  tools:context=".MyActivity">
+	<item
+			android:id="@+id/action_select_all"
+			android:title="@string/select_all"
+			android:showAsAction="ifRoom"/>
+	<item
+			android:id="@+id/action_select_cancel_all"
+			android:title="@string/select_cancel_all"
+			android:showAsAction="ifRoom"/>
+</menu>

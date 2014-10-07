@@ -29,6 +29,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import com.example.ryanwang.helloworld.R;
@@ -65,6 +66,8 @@ public class PersonalContentFragment extends Fragment {
 	//db
 	private NewsContentDBHelper dbHelper;
 	private SQLiteDatabase db;
+	//menuItem
+	private MenuItem multiSelectMenuItem;
 
 	@Override
 	public void onAttach(Activity activity) {
@@ -118,6 +121,7 @@ public class PersonalContentFragment extends Fragment {
 					} else {
 						hotEntryAdapter.getSelectIds().add(pos);
 					}
+					multiSelectMenuItem.setTitle(getString(R.string.select)+hotEntryAdapter.getSelectIds().size());
 					hotEntryAdapter.notifyDataSetChanged();
 
 				} else {
@@ -182,6 +186,7 @@ public class PersonalContentFragment extends Fragment {
 			menu.findItem(R.id.action_add_file).setVisible(false);
 			menu.findItem(R.id.action_delete_file).setVisible(false);
 			menu.findItem(R.id.action_delete_item).setVisible(true);
+			multiSelectMenuItem = menu.findItem(R.id.action_multi_select).setVisible(false);
 		}
 		super.onCreateOptionsMenu(menu, inflater);
 	}
@@ -195,6 +200,7 @@ public class PersonalContentFragment extends Fragment {
 				addMode = false;
 				layoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
 				buttonMultiSelectOk.setText(getString(R.string.delete));
+				multiSelectMenuItem.setVisible(true);
 				return true;
 			case R.id.action_add_my_favorite:
 				listViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
@@ -202,7 +208,42 @@ public class PersonalContentFragment extends Fragment {
 				addMode = true;
 				layoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
 				buttonMultiSelectOk.setText(getString(R.string.add));
+				multiSelectMenuItem.setVisible(true);
 				return true;
+			case R.id.action_multi_select:
+				Log.d("123","action_multi_select:::::::::::::::::::::::");
+				View menuItemView = getActivity().findViewById(R.id.action_multi_select); // SAME ID AS MENU ID
+				final PopupMenu popupMenu = new PopupMenu(getActivity(), menuItemView);
+				popupMenu.inflate(R.menu.multi_select_menu);
+				popupMenu.show();
+				popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+					@Override
+					public boolean onMenuItemClick(MenuItem item) {
+						switch (item.getItemId()) {
+							case R.id.action_select_all:
+								int size = listViewHotContent.getCount();
+								for(int i =0;i<size;i++){
+									listViewHotContent.setItemChecked(i,true);
+									if (!hotEntryAdapter.getSelectIds().contains(i)) {
+										hotEntryAdapter.getSelectIds().add(i);
+									}
+								}
+								multiSelectMenuItem.setTitle(getString(R.string.select)+ size);
+								popupMenu.dismiss();
+								break;
+							case R.id.action_select_cancel_all:
+								listViewHotContent.clearChoices();
+								hotEntryAdapter.getSelectIds().clear();
+								multiSelectMenuItem.setTitle(getString(R.string.select)+"0");
+								popupMenu.dismiss();
+								break;
+							default:
+								break;
+						}
+						hotEntryAdapter.notifyDataSetChanged();
+						return false;
+					}
+				});
 			default:
 				break;
 		}
@@ -332,7 +373,7 @@ public class PersonalContentFragment extends Fragment {
 					layoutMultiSelectButtonGroup.setVisibility(View.GONE);
 
 					listViewHotContent.clearChoices();
-
+					multiSelectMenuItem.setVisible(false);
 					hotEntryAdapter.getSelectIds().clear();
 					hotEntryAdapter.notifyDataSetChanged();
 					break;
@@ -399,7 +440,7 @@ public class PersonalContentFragment extends Fragment {
 
 			@Override
 			public void onOkClick() {
-				dbHelper.insertContentData(dataList, db, position, newFragment.getSelectFileName());
+				dbHelper.insertContentDataNoEncode(dataList, db, position, newFragment.getSelectFileName());
 				dbHelper.insertCategoryData(db, newFragment.getSelectFileName(), dataList.get(position).getImgUrl());
 
 				sendCategoryUIRefresh();

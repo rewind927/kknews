@@ -27,6 +27,7 @@ import android.widget.Button;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import com.example.ryanwang.helloworld.R;
@@ -64,6 +65,8 @@ public class PersonalFragment extends Fragment {
 	private boolean multiSelectMode = false;
 
 	private UpdateUIReceiver updateUiReceiver;
+	//menuItem
+	private MenuItem multiSelectMenuItem;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -87,7 +90,7 @@ public class PersonalFragment extends Fragment {
 					Log.d(TAG, "dataList.get(position).getCategory():" + dataList.get(position).getCategory());
 					bundle.putString(Def.PASS_TITLE_KEY, dataList.get(position).getCategory());
 					fragment.setArguments(bundle);
-					fragmentTransaction.add(R.id.content_frame, fragment);
+					fragmentTransaction.replace(R.id.content_frame, fragment);
 					fragmentTransaction.commit();
 				} else {
 					Log.d(TAG, "->> select:" + position);
@@ -97,6 +100,7 @@ public class PersonalFragment extends Fragment {
 					} else {
 						cateGoryAdapter.getSelectIds().add(pos);
 					}
+					multiSelectMenuItem.setTitle(getString(R.string.select)+cateGoryAdapter.getSelectIds().size());
 					cateGoryAdapter.notifyDataSetChanged();
 				}
 
@@ -166,6 +170,7 @@ public class PersonalFragment extends Fragment {
 			menu.findItem(R.id.action_add_file).setVisible(true);
 			menu.findItem(R.id.action_delete_file).setVisible(true);
 			menu.findItem(R.id.action_delete_item).setVisible(false);
+			multiSelectMenuItem = menu.findItem(R.id.action_multi_select).setVisible(false);
 		}
 		super.onCreateOptionsMenu(menu, inflater);
 	}
@@ -179,10 +184,45 @@ public class PersonalFragment extends Fragment {
 				gridViewShowCategory.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 				multiSelectMode = true;
 				layoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
+				multiSelectMenuItem.setVisible(true);
 				return true;
 			case R.id.action_add_file:
 				showAddFileDialog();
 				return true;
+			case R.id.action_multi_select:
+				Log.d("123","action_multi_select DDDDD:::::::::::::::::::::::");
+				View menuItemView = getActivity().findViewById(R.id.action_multi_select); // SAME ID AS MENU ID
+				final PopupMenu popupMenu = new PopupMenu(getActivity(), menuItemView);
+				popupMenu.inflate(R.menu.multi_select_menu);
+				popupMenu.show();
+				popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+					@Override
+					public boolean onMenuItemClick(MenuItem item) {
+						switch (item.getItemId()) {
+							case R.id.action_select_all:
+								int size = gridViewShowCategory.getCount();
+								for(int i =0;i<size;i++){
+									gridViewShowCategory.setItemChecked(i,true);
+									if (!cateGoryAdapter.getSelectIds().contains(i)) {
+										cateGoryAdapter.getSelectIds().add(i);
+									}
+								}
+								multiSelectMenuItem.setTitle(getString(R.string.select)+ size);
+								popupMenu.dismiss();
+								break;
+							case R.id.action_select_cancel_all:
+								gridViewShowCategory.clearChoices();
+								cateGoryAdapter.getSelectIds().clear();
+								multiSelectMenuItem.setTitle(getString(R.string.select)+"0");
+								popupMenu.dismiss();
+								break;
+							default:
+								break;
+						}
+						cateGoryAdapter.notifyDataSetChanged();
+						return true;
+					}
+				});
 			default:
 				break;
 		}
@@ -295,7 +335,7 @@ public class PersonalFragment extends Fragment {
 					layoutMultiSelectButtonGroup.setVisibility(View.GONE);
 
 					gridViewShowCategory.clearChoices();
-
+					multiSelectMenuItem.setVisible(false);
 					cateGoryAdapter.getSelectIds().clear();
 					cateGoryAdapter.notifyDataSetChanged();
 					break;
