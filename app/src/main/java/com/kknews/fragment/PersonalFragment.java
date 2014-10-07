@@ -50,64 +50,64 @@ public class PersonalFragment extends Fragment {
 	private static final String TAG = "PersonalFragment";
 
 	//data
-	private ArrayList<CategoryObject> mDataList;
+	private ArrayList<CategoryObject> dataList;
 
 	//UI
-	private GridView mGridViewShowCategory;
-	private CategoryAdapter mCateGoryAdapter;
-	private LinearLayout mLayoutMultiSelectButtonGroup;
+	private GridView gridViewShowCategory;
+	private CategoryAdapter cateGoryAdapter;
+	private LinearLayout layoutMultiSelectButtonGroup;
 	private Button buttonCancel;
 	private Button buttonOk;
 
 	//db
-	private NewsContentDBHelper mDbHelper;
-	private SQLiteDatabase mDB;
+	private NewsContentDBHelper dbHelper;
+	private SQLiteDatabase db;
 
-	private boolean mMultiSelectMode = false;
+	private boolean multiSelectMode = false;
 
-	private UpdateUIReceiver mUpdateUiReceiver;
+	private UpdateUIReceiver updateUiReceiver;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		Log.d(TAG, "onCreateView");
 		View view = inflater.inflate(R.layout.layout_personal, container, false);
-		mLayoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
+		layoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
 		((MyActivity) getActivity()).setDrawerIndicatorEnable(true);
-		mGridViewShowCategory = (GridView) view.findViewById(R.id.gridview_show_category);
-		mCateGoryAdapter = new CategoryAdapter(getActivity());
-		mGridViewShowCategory.setAdapter(mCateGoryAdapter);
-		mGridViewShowCategory.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		gridViewShowCategory = (GridView) view.findViewById(R.id.gridview_show_category);
+		cateGoryAdapter = new CategoryAdapter(getActivity());
+		gridViewShowCategory.setAdapter(cateGoryAdapter);
+		gridViewShowCategory.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				if (!mMultiSelectMode) {
+				if (!multiSelectMode) {
 					FragmentManager fragmentManager = getFragmentManager();
 					FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 					fragmentTransaction.addToBackStack(null);
 					PersonalContentFragment fragment = new PersonalContentFragment();
 					Bundle bundle = new Bundle();
-					Log.d(TAG, "mDataList.get(position).getCategory():" + mDataList.get(position).getCategory());
-					bundle.putString(Def.PASS_TITLE_KEY, mDataList.get(position).getCategory());
+					Log.d(TAG, "dataList.get(position).getCategory():" + dataList.get(position).getCategory());
+					bundle.putString(Def.PASS_TITLE_KEY, dataList.get(position).getCategory());
 					fragment.setArguments(bundle);
 					fragmentTransaction.add(R.id.content_frame, fragment);
 					fragmentTransaction.commit();
 				} else {
 					Log.d(TAG, "->> select:" + position);
 					Integer pos = new Integer(position);
-					if (mCateGoryAdapter.getSelectIds().contains(pos)) {
-						mCateGoryAdapter.getSelectIds().remove(pos);
+					if (cateGoryAdapter.getSelectIds().contains(pos)) {
+						cateGoryAdapter.getSelectIds().remove(pos);
 					} else {
-						mCateGoryAdapter.getSelectIds().add(pos);
+						cateGoryAdapter.getSelectIds().add(pos);
 					}
-					mCateGoryAdapter.notifyDataSetChanged();
+					cateGoryAdapter.notifyDataSetChanged();
 				}
 
 			}
 		});
-		mGridViewShowCategory.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+		gridViewShowCategory.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-				if (!mMultiSelectMode) {
+				if (!multiSelectMode) {
 					ViewHolder viewHolder = (ViewHolder) view.getTag();
 					showDialog(viewHolder.textTitle.getText().toString());
 				}
@@ -126,11 +126,11 @@ public class PersonalFragment extends Fragment {
 
 		setHasOptionsMenu(true);
 
-		mDbHelper = new NewsContentDBHelper(getActivity());
-		mDB = mDbHelper.getWritableDatabase();
+		dbHelper = new NewsContentDBHelper(getActivity());
+		db = dbHelper.getWritableDatabase();
 		getCategoryCursorFromDB();
 
-		mUpdateUiReceiver = new UpdateUIReceiver();
+		updateUiReceiver = new UpdateUIReceiver();
 
 		super.onCreate(savedInstanceState);
 	}
@@ -142,10 +142,10 @@ public class PersonalFragment extends Fragment {
 
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Def.ACTION_REFRESH_UI);
-		getActivity().registerReceiver(mUpdateUiReceiver, filter);
+		getActivity().registerReceiver(updateUiReceiver, filter);
 
 		parseData(getCategoryCursorFromDB());
-		mCateGoryAdapter.notifyDataSetChanged();
+		cateGoryAdapter.notifyDataSetChanged();
 	}
 
 	@Override
@@ -158,7 +158,7 @@ public class PersonalFragment extends Fragment {
 	public void onStop() {
 		super.onStop();
 
-		getActivity().unregisterReceiver(mUpdateUiReceiver);
+		getActivity().unregisterReceiver(updateUiReceiver);
 	}
 
 	@Override
@@ -177,11 +177,11 @@ public class PersonalFragment extends Fragment {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.action_delete_file:
-				mGridViewShowCategory.clearChoices();
-				mCateGoryAdapter.getSelectIds().clear();
-				mGridViewShowCategory.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-				mMultiSelectMode = true;
-				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
+				gridViewShowCategory.clearChoices();
+				cateGoryAdapter.getSelectIds().clear();
+				gridViewShowCategory.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+				multiSelectMode = true;
+				layoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
 				return true;
 			case R.id.action_add_file:
 				showAddFileDialog();
@@ -194,11 +194,11 @@ public class PersonalFragment extends Fragment {
 
 	@Override
 	public void onDestroy() {
-		if (mDbHelper != null) {
-			mDbHelper.close();
+		if (dbHelper != null) {
+			dbHelper.close();
 		}
-		if (mDB != null) {
-			mDB.close();
+		if (db != null) {
+			db.close();
 		}
 		super.onDestroy();
 	}
@@ -214,8 +214,8 @@ public class PersonalFragment extends Fragment {
 
 		@Override
 		public int getCount() {
-			if (mDataList != null) {
-				return mDataList.size();
+			if (dataList != null) {
+				return dataList.size();
 			}
 			return 0;
 		}
@@ -244,9 +244,9 @@ public class PersonalFragment extends Fragment {
 				holder = (ViewHolder) convertView.getTag();
 			}
 
-			if (mDataList != null) {
-				holder.textTitle.setText(mDataList.get(position).getCategory());
-				Bitmap bitmap = Utils.getBitmapFromInternal(getActivity(), mDataList.get(position).getImgUrl());
+			if (dataList != null) {
+				holder.textTitle.setText(dataList.get(position).getCategory());
+				Bitmap bitmap = Utils.getBitmapFromInternal(getActivity(), dataList.get(position).getImgUrl());
 				if (bitmap != null) {
 					holder.imageThumb.setImageBitmap(bitmap);
 				} else {
@@ -282,25 +282,25 @@ public class PersonalFragment extends Fragment {
 		public void onClick(View v) {
 			switch (v.getId()) {
 				case R.id.button_multi_select_ok:
-					if (mDB != null) {
-						SparseBooleanArray checkItemList = mGridViewShowCategory.getCheckedItemPositions();
-						int listSize = mGridViewShowCategory.getCount();
+					if (db != null) {
+						SparseBooleanArray checkItemList = gridViewShowCategory.getCheckedItemPositions();
+						int listSize = gridViewShowCategory.getCount();
 						for (int i = 0; i < listSize; i++) {
 							if (checkItemList.get(i)) {
 								Log.d(TAG, i + ":check ok");
-								deleteCategory(mDataList.get(i).getCategory());
+								deleteCategory(dataList.get(i).getCategory());
 							}
 						}
 					}
 					updateData();
 				case R.id.button_multi_select_cancel:
-					mMultiSelectMode = false;
-					mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
+					multiSelectMode = false;
+					layoutMultiSelectButtonGroup.setVisibility(View.GONE);
 
-					mGridViewShowCategory.clearChoices();
+					gridViewShowCategory.clearChoices();
 
-					mCateGoryAdapter.getSelectIds().clear();
-					mCateGoryAdapter.notifyDataSetChanged();
+					cateGoryAdapter.getSelectIds().clear();
+					cateGoryAdapter.notifyDataSetChanged();
 					break;
 			}
 		}
@@ -311,10 +311,10 @@ public class PersonalFragment extends Fragment {
 	}
 
 	private Cursor getCategoryCursorFromDB() {
-		if (mDB == null) {
+		if (db == null) {
 			return null;
 		}
-		Cursor cursor = mDB.rawQuery(NewsContentDBHelper.SQL_SELECT_CATEGORY_DATA, null);
+		Cursor cursor = db.rawQuery(NewsContentDBHelper.SQL_SELECT_CATEGORY_DATA, null);
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
 			Log.d(TAG, "category:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_FILE)));
@@ -325,11 +325,11 @@ public class PersonalFragment extends Fragment {
 	}
 
 	private void parseData(Cursor cursor) {
-		if (mDataList == null) {
-			mDataList = new ArrayList<CategoryObject>();
+		if (dataList == null) {
+			dataList = new ArrayList<CategoryObject>();
 		}
 
-		mDataList.clear();
+		dataList.clear();
 
 		if (cursor == null) {
 			return;
@@ -345,12 +345,12 @@ public class PersonalFragment extends Fragment {
 			Log.d(TAG, "thumbnail:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
 			cursor.moveToNext();
 
-			mDataList.add(data);
+			dataList.add(data);
 		}
 	}
 
 	private Cursor getCategoryContentCursorFromDB(String title) {
-		Cursor cursor = mDB.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_THUMBNAIL + " FROM " + NewsContentDBHelper.TABLE_CONTENT + "" +
+		Cursor cursor = db.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_THUMBNAIL + " FROM " + NewsContentDBHelper.TABLE_CONTENT + "" +
 				" " +
 				"WHERE " + NewsContentDBHelper.COLUMN_FILE + " = '" + title + "'", null);
 		cursor.moveToFirst();
@@ -362,7 +362,7 @@ public class PersonalFragment extends Fragment {
 	}
 
 	private Cursor getContentCursorFromDB() {
-		Cursor cursor = mDB.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_THUMBNAIL + " FROM " + NewsContentDBHelper
+		Cursor cursor = db.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_THUMBNAIL + " FROM " + NewsContentDBHelper
 				.TABLE_KKEWNS_CONTENT + "" +
 				" ;", null);
 		cursor.moveToFirst();
@@ -414,7 +414,7 @@ public class PersonalFragment extends Fragment {
 				}
 				insertCategoryData(fileName, newFragment.getThumbName());
 				updateData();
-				mCateGoryAdapter.notifyDataSetChanged();
+				cateGoryAdapter.notifyDataSetChanged();
 
 			}
 		});
@@ -443,7 +443,7 @@ public class PersonalFragment extends Fragment {
 			public void onOkClick() {
 				updateCategoryThumb(title, newFragment.getFileName(), newFragment.getThumbName());
 				updateData();
-				mCateGoryAdapter.notifyDataSetChanged();
+				cateGoryAdapter.notifyDataSetChanged();
 
 			}
 		});
@@ -462,7 +462,7 @@ public class PersonalFragment extends Fragment {
 		}
 		values.put(NewsContentDBHelper.COLUMN_FILE, replaceTitle);
 		try {
-			mDB.update(NewsContentDBHelper.TABLE_CATEGORY, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'",
+			db.update(NewsContentDBHelper.TABLE_CATEGORY, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'",
 					null);
 		} catch (SQLiteConstraintException exception) {
 			deleteCategory(originalTitle);
@@ -473,7 +473,7 @@ public class PersonalFragment extends Fragment {
 		ContentValues values = new ContentValues();
 		values.put(NewsContentDBHelper.COLUMN_FILE, replaceTitle);
 		try {
-			mDB.update(NewsContentDBHelper.TABLE_CONTENT, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'",
+			db.update(NewsContentDBHelper.TABLE_CONTENT, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'",
 					null);
 		} catch (SQLiteConstraintException exception) {
 			//deleteContent();
@@ -484,18 +484,18 @@ public class PersonalFragment extends Fragment {
 		Log.d(TAG, "delete:" + category);
 		deleteContent(category);
 
-		mDB.delete(NewsContentDBHelper.TABLE_CATEGORY, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + category + "'", null);
+		db.delete(NewsContentDBHelper.TABLE_CATEGORY, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + category + "'", null);
 	}
 
 	private void deleteContent(String category) {
-		mDB.delete(NewsContentDBHelper.TABLE_CONTENT, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + category + "'", null);
+		db.delete(NewsContentDBHelper.TABLE_CONTENT, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + category + "'", null);
 	}
 
 	private void insertCategoryData(String fileName, String thumbFileName) {
 		ContentValues value = new ContentValues();
 		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
 		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbFileName);
-		mDB.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
+		db.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
 	}
 
 	class UpdateUIReceiver extends BroadcastReceiver {
@@ -504,7 +504,7 @@ public class PersonalFragment extends Fragment {
 		public void onReceive(Context context, Intent intent) {
 
 			parseData(getCategoryCursorFromDB());
-			mCateGoryAdapter.notifyDataSetChanged();
+			cateGoryAdapter.notifyDataSetChanged();
 
 		}
 	}

@@ -50,22 +50,22 @@ public class PersonalContentFragment extends Fragment {
 	public final static String TAG = "PersonalContentFragment";
 
 	//view
-	private LinearLayout mLayoutMultiSelectButtonGroup;
-	private Button mButtonMultiSelectOk;
-	private Button mButtonMultiSelectCancel;
-	private ListView mListViewHotContent;
-	private HotEntryAdapter mAdapterHotEntry;
+	private LinearLayout layoutMultiSelectButtonGroup;
+	private Button buttonMultiSelectOk;
+	private Button buttonMultiSelectCancel;
+	private ListView listViewHotContent;
+	private HotEntryAdapter hotEntryAdapter;
 
-	private boolean mMultiSelectMode = false;
-	private boolean mAddMode = false; // true: add , false: delete
+	private boolean multiSelectMode = false;
+	private boolean addMode = false; // true: add , false: delete
 
-	private String mTitle;
+	private String title;
 
 	// data
-	private ArrayList<ContentDataObject> mDataList;
+	private ArrayList<ContentDataObject> dataList;
 	//db
-	private NewsContentDBHelper mDbHelper;
-	private SQLiteDatabase mDB;
+	private NewsContentDBHelper dbHelper;
+	private SQLiteDatabase db;
 
 	@Override
 	public void onAttach(Activity activity) {
@@ -76,11 +76,11 @@ public class PersonalContentFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		mDbHelper = new NewsContentDBHelper(getActivity());
-		mDB = mDbHelper.getWritableDatabase();
+		dbHelper = new NewsContentDBHelper(getActivity());
+		db = dbHelper.getWritableDatabase();
 
 		Bundle bundle = this.getArguments();
-		mTitle = bundle.getString(Def.PASS_TITLE_KEY, null);
+		title = bundle.getString(Def.PASS_TITLE_KEY, null);
 
 	}
 
@@ -90,36 +90,36 @@ public class PersonalContentFragment extends Fragment {
 		View view = inflater.inflate(R.layout.layout_hot_content, container, false);
 		TextView textHotTitle = (TextView) view.findViewById(R.id.text_hot_title);
 		Bundle bundle = this.getArguments();
-		mTitle = bundle.getString(Def.PASS_TITLE_KEY, null);
-		textHotTitle.setText(mTitle);
+		title = bundle.getString(Def.PASS_TITLE_KEY, null);
+		textHotTitle.setText(title);
 
 		setHasOptionsMenu(true);
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
 		((MyActivity)getActivity()).setDrawerIndicatorEnable(false);
 
-		mLayoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
-		mButtonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);
-		mButtonMultiSelectCancel = (Button) view.findViewById(R.id.button_multi_select_cancel);
-		mButtonMultiSelectOk.setOnClickListener(mClickMultiSelectListener);
-		mButtonMultiSelectCancel.setOnClickListener(mClickMultiSelectListener);
+		layoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
+		buttonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);
+		buttonMultiSelectCancel = (Button) view.findViewById(R.id.button_multi_select_cancel);
+		buttonMultiSelectOk.setOnClickListener(mClickMultiSelectListener);
+		buttonMultiSelectCancel.setOnClickListener(mClickMultiSelectListener);
 
-		mListViewHotContent = (ListView) view.findViewById(R.id.listview_hot_content);
-		mAdapterHotEntry = new HotEntryAdapter(getActivity());
-		mListViewHotContent.setAdapter(mAdapterHotEntry);
+		listViewHotContent = (ListView) view.findViewById(R.id.listview_hot_content);
+		hotEntryAdapter = new HotEntryAdapter(getActivity());
+		listViewHotContent.setAdapter(hotEntryAdapter);
 
-		mListViewHotContent.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		listViewHotContent.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				if (mMultiSelectMode) {
+				if (multiSelectMode) {
 
 					Integer pos = new Integer(position);
-					if (mAdapterHotEntry.getSelectIds().contains(pos)) {
-						mAdapterHotEntry.getSelectIds().remove(pos);
+					if (hotEntryAdapter.getSelectIds().contains(pos)) {
+						hotEntryAdapter.getSelectIds().remove(pos);
 					} else {
-						mAdapterHotEntry.getSelectIds().add(pos);
+						hotEntryAdapter.getSelectIds().add(pos);
 					}
-					mAdapterHotEntry.notifyDataSetChanged();
+					hotEntryAdapter.notifyDataSetChanged();
 
 				} else {
 					TextView textDescription = (TextView) view.findViewById(R.id.text_description);
@@ -132,11 +132,11 @@ public class PersonalContentFragment extends Fragment {
 
 			}
 		});
-		mListViewHotContent.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+		listViewHotContent.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-				if (!mMultiSelectMode) {
-					showInsertDialog(mTitle, position);
+				if (!multiSelectMode) {
+					showInsertDialog(title, position);
 				}
 				return false;
 			}
@@ -164,11 +164,11 @@ public class PersonalContentFragment extends Fragment {
 
 	@Override
 	public void onDestroy() {
-		if (mDbHelper != null) {
-			mDbHelper.close();
+		if (dbHelper != null) {
+			dbHelper.close();
 		}
-		if (mDB != null) {
-			mDB.close();
+		if (db != null) {
+			db.close();
 		}
 
 		super.onDestroy();
@@ -191,18 +191,18 @@ public class PersonalContentFragment extends Fragment {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.action_delete_item:
-				mListViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-				mMultiSelectMode = true;
-				mAddMode = false;
-				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
-				mButtonMultiSelectOk.setText(getString(R.string.delete));
+				listViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+				multiSelectMode = true;
+				addMode = false;
+				layoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
+				buttonMultiSelectOk.setText(getString(R.string.delete));
 				return true;
 			case R.id.action_add_my_favorite:
-				mListViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-				mMultiSelectMode = true;
-				mAddMode = true;
-				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
-				mButtonMultiSelectOk.setText(getString(R.string.add));
+				listViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+				multiSelectMode = true;
+				addMode = true;
+				layoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
+				buttonMultiSelectOk.setText(getString(R.string.add));
 				return true;
 			default:
 				break;
@@ -221,15 +221,15 @@ public class PersonalContentFragment extends Fragment {
 
 		@Override
 		public int getCount() {
-			if (mDataList == null) {
+			if (dataList == null) {
 				return 0;
 			}
-			return mDataList.size();
+			return dataList.size();
 		}
 
 		@Override
 		public Object getItem(int i) {
-			return mDataList.get(i);
+			return dataList.get(i);
 		}
 
 		@Override
@@ -252,11 +252,11 @@ public class PersonalContentFragment extends Fragment {
 				holder = (ViewHolder) convertView.getTag();
 			}
 
-			if (mDataList != null) {
-				holder.textTitle.setText(mDataList.get(i).getTitle());
+			if (dataList != null) {
+				holder.textTitle.setText(dataList.get(i).getTitle());
 				holder.textDescription.setMovementMethod(LinkMovementMethod.getInstance());
-				holder.textDescription.setText(Html.fromHtml(mDataList.get(i).getDescription()));
-				Bitmap bitmap = Utils.getBitmapFromInternal(getActivity(), mDataList.get(i).getImgUrl());
+				holder.textDescription.setText(Html.fromHtml(dataList.get(i).getDescription()));
+				Bitmap bitmap = Utils.getBitmapFromInternal(getActivity(), dataList.get(i).getImgUrl());
 				if (bitmap != null) {
 					holder.viewThumb.setImageBitmap(bitmap);
 				} else {
@@ -288,11 +288,11 @@ public class PersonalContentFragment extends Fragment {
 	}
 
 	private void parseData(Cursor cursor) {
-		if (mDataList == null) {
-			mDataList = new ArrayList<ContentDataObject>();
+		if (dataList == null) {
+			dataList = new ArrayList<ContentDataObject>();
 		}
 
-		mDataList.clear();
+		dataList.clear();
 
 		if (cursor == null) {
 			return;
@@ -310,13 +310,13 @@ public class PersonalContentFragment extends Fragment {
 			data.setImgUrl(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
 			cursor.moveToNext();
 
-			mDataList.add(data);
+			dataList.add(data);
 		}
 	}
 
 	private Cursor getDataCursorFromDB() {
-		Cursor cursor = mDB.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_CONTENT + " WHERE " + NewsContentDBHelper.COLUMN_FILE +
-				" = '" + mTitle + "'", null);
+		Cursor cursor = db.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_CONTENT + " WHERE " + NewsContentDBHelper.COLUMN_FILE +
+				" = '" + title + "'", null);
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
 			Log.d(TAG, "title:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_TITLE)));
@@ -330,23 +330,23 @@ public class PersonalContentFragment extends Fragment {
 		public void onClick(View v) {
 			switch (v.getId()) {
 				case R.id.button_multi_select_ok:
-					if (mDB != null) {
+					if (db != null) {
 						SparseBooleanArray checkItemList;
-						checkItemList = mListViewHotContent.getCheckedItemPositions().clone();
-						if (mAddMode) {
-							showMutliInsertDialog(mTitle, checkItemList);
+						checkItemList = listViewHotContent.getCheckedItemPositions().clone();
+						if (addMode) {
+							showMutliInsertDialog(title, checkItemList);
 						} else {
 							showDeleteContentDialog(checkItemList);
 						}
 					}
 				case R.id.button_multi_select_cancel:
-					mMultiSelectMode = false;
-					mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
+					multiSelectMode = false;
+					layoutMultiSelectButtonGroup.setVisibility(View.GONE);
 
-					mListViewHotContent.clearChoices();
+					listViewHotContent.clearChoices();
 
-					mAdapterHotEntry.getSelectIds().clear();
-					mAdapterHotEntry.notifyDataSetChanged();
+					hotEntryAdapter.getSelectIds().clear();
+					hotEntryAdapter.notifyDataSetChanged();
 					break;
 			}
 		}
@@ -359,17 +359,17 @@ public class PersonalContentFragment extends Fragment {
 		exitAlertDialog.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
+				layoutMultiSelectButtonGroup.setVisibility(View.GONE);
 				checkList.clear();
 			}
 		});
 		exitAlertDialog.setPositiveButton(getString(R.string.delete), new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
+				layoutMultiSelectButtonGroup.setVisibility(View.GONE);
 				deleteSelectContent(checkList);
 				parseData(getDataCursorFromDB());
-				mAdapterHotEntry.notifyDataSetChanged();
+				hotEntryAdapter.notifyDataSetChanged();
 				checkList.clear();
 			}
 		});
@@ -377,11 +377,11 @@ public class PersonalContentFragment extends Fragment {
 	}
 
 	private void deleteSelectContent(SparseBooleanArray checkItemList) {
-		int listSize = mListViewHotContent.getCount();
+		int listSize = listViewHotContent.getCount();
 		for (int i = 0; i < listSize; i++) {
 			if (checkItemList.get(i)) {
-				mDB.delete(NewsContentDBHelper.TABLE_CONTENT, NewsContentDBHelper.COLUMN_TITLE + " = " + "'" + mDataList.get(i).getTitle()
-						+ "' AND " + NewsContentDBHelper.COLUMN_FILE + " = " + "'" + mTitle + "'", null);
+				db.delete(NewsContentDBHelper.TABLE_CONTENT, NewsContentDBHelper.COLUMN_TITLE + " = " + "'" + dataList.get(i).getTitle()
+						+ "' AND " + NewsContentDBHelper.COLUMN_FILE + " = " + "'" + title + "'", null);
 			}
 		}
 	}
@@ -394,7 +394,7 @@ public class PersonalContentFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(mDB);
+		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(db);
 
 		ArrayList<String> imageList = NewsContentDBHelper.parseThumbList(cursor);
 		ArrayList<String> titleList = NewsContentDBHelper.parseCategoryNameList(cursor);
@@ -412,7 +412,7 @@ public class PersonalContentFragment extends Fragment {
 			@Override
 			public void onOkClick() {
 				insertContentData(position, newFragment.getSelectFileName());
-				insertCategoryData(newFragment.getSelectFileName(), mDataList.get(position).getImgUrl());
+				insertCategoryData(newFragment.getSelectFileName(), dataList.get(position).getImgUrl());
 
 				sendCategoryUIRefresh();
 			}
@@ -427,7 +427,7 @@ public class PersonalContentFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(mDB);
+		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(db);
 
 		ArrayList<String> imageList = NewsContentDBHelper.parseThumbList(cursor);
 		ArrayList<String> titleList = NewsContentDBHelper.parseCategoryNameList(cursor);
@@ -446,7 +446,7 @@ public class PersonalContentFragment extends Fragment {
 
 			@Override
 			public void onOkClick() {
-				int listSize = mListViewHotContent.getCount();
+				int listSize = listViewHotContent.getCount();
 				int lastCheckPosition = 0;
 				for (int i = 0; i < listSize; i++) {
 					if (checkItemList.get(i)) {
@@ -456,7 +456,7 @@ public class PersonalContentFragment extends Fragment {
 					}
 				}
 
-				insertCategoryData(newFragment.getSelectFileName(), mDataList.get(lastCheckPosition).getImgUrl());
+				insertCategoryData(newFragment.getSelectFileName(), dataList.get(lastCheckPosition).getImgUrl());
 
 				sendCategoryUIRefresh();
 
@@ -471,11 +471,11 @@ public class PersonalContentFragment extends Fragment {
 		ContentValues value = new ContentValues();
 		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
 		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbFileName);
-		mDB.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
+		db.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
 	}
 
 	private void insertContentData(int position, String fileName) {
-		ContentDataObject data = mDataList.get(position);
+		ContentDataObject data = dataList.get(position);
 		ContentValues value = new ContentValues();
 		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
 		value.put(NewsContentDBHelper.COLUMN_CATEGORY, data.getCategory());
@@ -484,7 +484,7 @@ public class PersonalContentFragment extends Fragment {
 		value.put(NewsContentDBHelper.COLUMN_TITLE, data.getTitle());
 		value.put(NewsContentDBHelper.COLUMN_URL, data.getLink());
 		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, data.getImgUrl());
-		mDB.insert(NewsContentDBHelper.TABLE_CONTENT, null, value);
+		db.insert(NewsContentDBHelper.TABLE_CONTENT, null, value);
 	}
 
 	private void sendCategoryUIRefresh( ) {

@@ -22,7 +22,13 @@ import com.kknews.util.Utils;
  */
 public class SettingFragment extends Fragment {
 
-	private String[] mSpinnerText = {"30秒", "1分鐘", "5分鐘", "10分鐘"};
+	private String[] spinnerText;
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		spinnerText = getResources().getStringArray(R.array.setting_times);
+	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -40,7 +46,7 @@ public class SettingFragment extends Fragment {
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
 		((MyActivity)getActivity()).setDrawerIndicatorEnable(true);
 		Spinner spinnerChoiceTime = (Spinner) view.findViewById(R.id.spinner_choice_time);
-		ArrayAdapter spinnerAdapter = new ArrayAdapter<String>(getActivity(),R.layout.layout_spinner, mSpinnerText);
+		ArrayAdapter spinnerAdapter = new ArrayAdapter<String>(getActivity(),R.layout.layout_spinner, spinnerText);
 		spinnerAdapter.setDropDownViewResource(R.layout.layout_spinner);
 		spinnerChoiceTime.setAdapter(spinnerAdapter);
 		spinnerChoiceTime.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {

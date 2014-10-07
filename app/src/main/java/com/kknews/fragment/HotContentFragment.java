@@ -63,75 +63,75 @@ public class HotContentFragment extends Fragment {
 	public final static String TAG = "HotContentFragment";
 
 	//view
-	private LinearLayout mLayoutMultiSelectButtonGroup;
-	private Button mButtonMultiSelectOk;
-	private Button mButtonMultiSelectCancel;
-	private ListView mListViewHotContent;
-	private HotEntryAdapter mAdapterHotEntry;
+	private LinearLayout layoutMultiSelectButtonGroup;
+	private Button buttonMultiSelectOk;
+	private Button buttonMultiSelectCancel;
+	private ListView listViewHotContent;
+	private HotEntryAdapter adapterHotEntry;
 
-	private boolean mMultiSelectMode = false;
+	private boolean multiSelectMode = false;
 
-	private String mTitle;
+	private String title;
 
 	// data
-	private ArrayList<ContentDataObject> mDataList;
+	private ArrayList<ContentDataObject> dataList;
 	//db
-	private NewsContentDBHelper mDbHelper;
-	private SQLiteDatabase mDB;
+	private NewsContentDBHelper dbHelper;
+	private SQLiteDatabase db;
 	//broadcast
-	private UpdateUIReceiver mUpdateUiReceiver;
+	private UpdateUIReceiver updateUiReceiver;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.layout_hot_content, container, false);
 		TextView textHotTitle = (TextView) view.findViewById(R.id.text_hot_title);
 		Bundle bundle = this.getArguments();
-		mTitle = bundle.getString(Def.PASS_TITLE_KEY, null);
-		textHotTitle.setText(mTitle);
+		title = bundle.getString(Def.PASS_TITLE_KEY, null);
+		textHotTitle.setText(title);
 
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
 		((MyActivity)getActivity()).setDrawerIndicatorEnable(false);
 
-		mLayoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
-		mButtonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);
-		mButtonMultiSelectCancel = (Button) view.findViewById(R.id.button_multi_select_cancel);
-		mButtonMultiSelectOk.setOnClickListener(mClickMultiSelectListener);
-		mButtonMultiSelectCancel.setOnClickListener(mClickMultiSelectListener);
+		layoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
+		buttonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);
+		buttonMultiSelectCancel = (Button) view.findViewById(R.id.button_multi_select_cancel);
+		buttonMultiSelectOk.setOnClickListener(mClickMultiSelectListener);
+		buttonMultiSelectCancel.setOnClickListener(mClickMultiSelectListener);
 
-		mListViewHotContent = (ListView) view.findViewById(R.id.listview_hot_content);
-		mListViewHotContent.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		listViewHotContent = (ListView) view.findViewById(R.id.listview_hot_content);
+		listViewHotContent.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				if (mMultiSelectMode) {
+				if (multiSelectMode) {
 
 					Integer pos = new Integer(position);
-					if (mAdapterHotEntry.getSelectIds().contains(pos)) {
-						mAdapterHotEntry.getSelectIds().remove(pos);
+					if (adapterHotEntry.getSelectIds().contains(pos)) {
+						adapterHotEntry.getSelectIds().remove(pos);
 					} else {
-						mAdapterHotEntry.getSelectIds().add(pos);
+						adapterHotEntry.getSelectIds().add(pos);
 					}
-					mAdapterHotEntry.notifyDataSetChanged();
+					adapterHotEntry.notifyDataSetChanged();
 
 				} else {
 					Integer pos = new Integer(position);
-					if (mAdapterHotEntry.getOpenDescription().contains(pos)) {
-						mAdapterHotEntry.getOpenDescription().remove(pos);
+					if (adapterHotEntry.getOpenDescription().contains(pos)) {
+						adapterHotEntry.getOpenDescription().remove(pos);
 					} else {
-						mAdapterHotEntry.getOpenDescription().add(pos);
+						adapterHotEntry.getOpenDescription().add(pos);
 					}
-					mAdapterHotEntry.notifyDataSetChanged();
+					adapterHotEntry.notifyDataSetChanged();
 				}
 
 			}
 		});
-		mListViewHotContent.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+		listViewHotContent.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-				if (!mMultiSelectMode) {
+				if (!multiSelectMode) {
 					ViewHolder viewHolder = (ViewHolder) view.getTag();
 					//showDialog(viewHolder.textTitle.getText().toString(), position);
-					showDialog(mTitle, position);
+					showDialog(title, position);
 				}
 				return false;
 			}
@@ -144,21 +144,21 @@ public class HotContentFragment extends Fragment {
 		super.onResume();
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Def.ACTION_REFRESH_UI);
-		getActivity().registerReceiver(mUpdateUiReceiver, filter);
+		getActivity().registerReceiver(updateUiReceiver, filter);
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
-		mDataList = parseData(getDataCursorFormDB(mTitle));
-		mAdapterHotEntry = new HotEntryAdapter(getActivity());
-		mListViewHotContent.setAdapter(mAdapterHotEntry);
+		dataList = parseData(getDataCursorFormDB(title));
+		adapterHotEntry = new HotEntryAdapter(getActivity());
+		listViewHotContent.setAdapter(adapterHotEntry);
 	}
 
 	@Override
 	public void onPause() {
 		super.onPause();
-		getActivity().unregisterReceiver(mUpdateUiReceiver);
+		getActivity().unregisterReceiver(updateUiReceiver);
 	}
 
 	@Override
@@ -168,11 +168,11 @@ public class HotContentFragment extends Fragment {
 
 	@Override
 	public void onDestroy() {
-		if (mDbHelper != null) {
-			mDbHelper.close();
+		if (dbHelper != null) {
+			dbHelper.close();
 		}
-		if (mDB != null) {
-			mDB.close();
+		if (db != null) {
+			db.close();
 		}
 
 		super.onDestroy();
@@ -188,13 +188,13 @@ public class HotContentFragment extends Fragment {
 
 		setHasOptionsMenu(true);
 
-		mDbHelper = new NewsContentDBHelper(getActivity());
-		mDB = mDbHelper.getWritableDatabase();
+		dbHelper = new NewsContentDBHelper(getActivity());
+		db = dbHelper.getWritableDatabase();
 
 		Bundle bundle = this.getArguments();
 		final String dataUrl = bundle.getString(Def.PASS_URL_KEY, null);
 
-		mUpdateUiReceiver = new UpdateUIReceiver();
+		updateUiReceiver = new UpdateUIReceiver();
 
 		super.onCreate(savedInstanceState);
 	}
@@ -215,9 +215,9 @@ public class HotContentFragment extends Fragment {
 		switch (item.getItemId()) {
 			case R.id.action_add_my_favorite:
 				Log.d(TAG, "action_add_my_favorite");
-				mListViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-				mMultiSelectMode = true;
-				mLayoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
+				listViewHotContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+				multiSelectMode = true;
+				layoutMultiSelectButtonGroup.setVisibility(View.VISIBLE);
 				break;
 			default:
 				break;
@@ -226,7 +226,7 @@ public class HotContentFragment extends Fragment {
 	}
 
 	private Cursor getDataCursorFormDB(String title) {
-		return mDB.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_KKEWNS_CONTENT + " WHERE " + NewsContentDBHelper.COLUMN_FILE +
+		return db.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_KKEWNS_CONTENT + " WHERE " + NewsContentDBHelper.COLUMN_FILE +
 				"" +
 				" " +
 				"= " + "'" + title + "' ORDER BY " + NewsContentDBHelper.COLUMN_ID + ";", null);
@@ -259,7 +259,7 @@ public class HotContentFragment extends Fragment {
 	}
 
 	private void getData(String url) {
-		mDataList = getXml(url);
+		dataList = getXml(url);
 		mHandler.sendEmptyMessage(3);
 	}
 
@@ -325,15 +325,15 @@ public class HotContentFragment extends Fragment {
 
 		@Override
 		public int getCount() {
-			if (mDataList == null) {
+			if (dataList == null) {
 				return 0;
 			}
-			return mDataList.size();
+			return dataList.size();
 		}
 
 		@Override
 		public Object getItem(int i) {
-			return mDataList.get(i);
+			return dataList.get(i);
 		}
 
 		@Override
@@ -356,9 +356,9 @@ public class HotContentFragment extends Fragment {
 				holder = (ViewHolder) convertView.getTag();
 			}
 
-			holder.textTitle.setText(mDataList.get(i).getTitle());
+			holder.textTitle.setText(dataList.get(i).getTitle());
 			holder.textDescription.setMovementMethod(LinkMovementMethod.getInstance());
-			holder.textDescription.setText(Html.fromHtml(mDataList.get(i).getDescription()));
+			holder.textDescription.setText(Html.fromHtml(dataList.get(i).getDescription()));
 			holder.position = i;
 
 			if (selectedIds.contains(i)) {
@@ -373,7 +373,7 @@ public class HotContentFragment extends Fragment {
 				holder.textDescription.setVisibility(View.GONE);
 			}
 
-			new LoadImage(i, holder, mDataList.get(i).getImgUrl()).execute();
+			new LoadImage(i, holder, dataList.get(i).getImgUrl()).execute();
 
 			return convertView;
 		}
@@ -397,19 +397,19 @@ public class HotContentFragment extends Fragment {
 		public void onClick(View v) {
 			switch (v.getId()) {
 				case R.id.button_multi_select_ok:
-					if (mDB != null) {
+					if (db != null) {
 						SparseBooleanArray checkItemList;
-						checkItemList = mListViewHotContent.getCheckedItemPositions().clone();
-						showMultiInsertDialog(mTitle, checkItemList);
+						checkItemList = listViewHotContent.getCheckedItemPositions().clone();
+						showMultiInsertDialog(title, checkItemList);
 					}
 				case R.id.button_multi_select_cancel:
-					mMultiSelectMode = false;
-					mLayoutMultiSelectButtonGroup.setVisibility(View.GONE);
+					multiSelectMode = false;
+					layoutMultiSelectButtonGroup.setVisibility(View.GONE);
 
-					mListViewHotContent.clearChoices();
+					listViewHotContent.clearChoices();
 
-					mAdapterHotEntry.getSelectIds().clear();
-					mAdapterHotEntry.notifyDataSetChanged();
+					adapterHotEntry.getSelectIds().clear();
+					adapterHotEntry.notifyDataSetChanged();
 					break;
 			}
 		}
@@ -419,7 +419,7 @@ public class HotContentFragment extends Fragment {
 		@Override
 		public void handleMessage(Message msg) {
 			Toast.makeText(getActivity(), "get data", Toast.LENGTH_SHORT).show();
-			mAdapterHotEntry.notifyDataSetChanged();
+			adapterHotEntry.notifyDataSetChanged();
 
 		}
 	};
@@ -427,8 +427,8 @@ public class HotContentFragment extends Fragment {
 	Handler mHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			mAdapterHotEntry = new HotEntryAdapter(getActivity());
-			mListViewHotContent.setAdapter(mAdapterHotEntry);
+			adapterHotEntry = new HotEntryAdapter(getActivity());
+			listViewHotContent.setAdapter(adapterHotEntry);
 
 		}
 	};
@@ -442,7 +442,7 @@ public class HotContentFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(mDB);
+		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(db);
 
 		ArrayList<String> imageList = NewsContentDBHelper.parseThumbList(cursor);
 		ArrayList<String> titleList = NewsContentDBHelper.parseCategoryNameList(cursor);
@@ -461,7 +461,7 @@ public class HotContentFragment extends Fragment {
 			@Override
 			public void onOkClick() {
 
-				int listSize = mListViewHotContent.getCount();
+				int listSize = listViewHotContent.getCount();
 				int lastCheckPosition = 0;
 				for (int i = 0; i < listSize; i++) {
 					if (checkItemList.get(i)) {
@@ -471,7 +471,7 @@ public class HotContentFragment extends Fragment {
 					}
 				}
 
-				insertCategoryData(newFragment.getSelectFileName(), Utils.encodeBase64(mDataList.get(lastCheckPosition).getImgUrl()));
+				insertCategoryData(newFragment.getSelectFileName(), Utils.encodeBase64(dataList.get(lastCheckPosition).getImgUrl()));
 
 				if (checkItemList != null) {
 					checkItemList.clear();
@@ -490,7 +490,7 @@ public class HotContentFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(mDB);
+		Cursor cursor = NewsContentDBHelper.getCategoryCursorFromDB(db);
 
 		ArrayList<String> imageList = NewsContentDBHelper.parseThumbList(cursor);
 		ArrayList<String> titleList = NewsContentDBHelper.parseCategoryNameList(cursor);
@@ -508,7 +508,7 @@ public class HotContentFragment extends Fragment {
 			@Override
 			public void onOkClick() {
 				insertContentData(position, newFragment.getSelectFileName());
-				insertCategoryData(newFragment.getSelectFileName(), Utils.encodeBase64(mDataList.get(position).getImgUrl()));
+				insertCategoryData(newFragment.getSelectFileName(), Utils.encodeBase64(dataList.get(position).getImgUrl()));
 			}
 		});
 	}
@@ -517,11 +517,11 @@ public class HotContentFragment extends Fragment {
 		ContentValues value = new ContentValues();
 		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
 		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbFileName);
-		mDB.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
+		db.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
 	}
 
 	private void insertContentData(int position, String fileName) {
-		ContentDataObject data = mDataList.get(position);
+		ContentDataObject data = dataList.get(position);
 		ContentValues value = new ContentValues();
 		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
 		value.put(NewsContentDBHelper.COLUMN_CATEGORY, data.getCategory());
@@ -530,7 +530,7 @@ public class HotContentFragment extends Fragment {
 		value.put(NewsContentDBHelper.COLUMN_TITLE, data.getTitle());
 		value.put(NewsContentDBHelper.COLUMN_URL, data.getLink());
 		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, Utils.encodeBase64(data.getImgUrl()));
-		mDB.insert(NewsContentDBHelper.TABLE_CONTENT, null, value);
+		db.insert(NewsContentDBHelper.TABLE_CONTENT, null, value);
 	}
 
 	class LoadImage extends AsyncTask<Object, Void, Bitmap> {
@@ -592,10 +592,10 @@ public class HotContentFragment extends Fragment {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			Bundle bundle = intent.getExtras();
-			if (bundle.getString(Def.PASS_TITLE_KEY).equals(mTitle)) {
-				mDataList = parseData(getDataCursorFormDB(mTitle));
-				mAdapterHotEntry = new HotEntryAdapter(getActivity());
-				mListViewHotContent.setAdapter(mAdapterHotEntry);
+			if (bundle.getString(Def.PASS_TITLE_KEY).equals(title)) {
+				dataList = parseData(getDataCursorFormDB(title));
+				adapterHotEntry = new HotEntryAdapter(getActivity());
+				listViewHotContent.setAdapter(adapterHotEntry);
 
 			}
 		}

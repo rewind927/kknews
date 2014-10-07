@@ -1,13 +1,10 @@
 package com.kknews.fragment;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -40,10 +37,10 @@ import java.util.ArrayList;
  */
 public class HotFragment extends Fragment {
 	private static final String TAG = "HotFragment";
-	private ListView mListViewHotEntry;
-	private HotEntryAdapter mAdapterHotEntry;
+	private ListView listViewHotEntry;
+	private HotEntryAdapter adapterHotEntry;
 
-	private ArrayList<ListDataObject> mDataList;
+	private ArrayList<ListDataObject> dataList;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -51,8 +48,8 @@ public class HotFragment extends Fragment {
 
 		((MyActivity)getActivity()).setDrawerIndicatorEnable(true);
 
-		mListViewHotEntry = (ListView) view.findViewById(R.id.listview_hot_entry);
-		mListViewHotEntry.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		listViewHotEntry = (ListView) view.findViewById(R.id.listview_hot_entry);
+		listViewHotEntry.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 				FragmentManager fragmentManager = getFragmentManager();
@@ -60,8 +57,8 @@ public class HotFragment extends Fragment {
 				fragmentTransaction.addToBackStack(null);
 				HotContentFragment fragment = new HotContentFragment();
 				Bundle bundle = new Bundle();
-				bundle.putString(Def.PASS_URL_KEY,mDataList.get(i).getUrl());
-				bundle.putString(Def.PASS_TITLE_KEY,mDataList.get(i).getTitle());
+				bundle.putString(Def.PASS_URL_KEY, dataList.get(i).getUrl());
+				bundle.putString(Def.PASS_TITLE_KEY, dataList.get(i).getTitle());
 				fragment.setArguments(bundle);
 				fragmentTransaction.add(R.id.content_frame, fragment);
 				fragmentTransaction.commit();
@@ -80,7 +77,7 @@ public class HotFragment extends Fragment {
 
 					@Override
 					public void onFinish(ArrayList<ListDataObject> dataList) {
-						if (mListViewHotEntry != null) {
+						if (listViewHotEntry != null) {
 							mHandler.sendEmptyMessage(3);
 						}
 						Log.d(TAG, "dtatList.size:" + dataList.size());
@@ -133,9 +130,9 @@ public class HotFragment extends Fragment {
 			Document doc = Jsoup.connect(url).get();
 
 			Elements metaElems = doc.select("div.span2");
-			mDataList = parseHotElements(metaElems);
+			dataList = parseHotElements(metaElems);
 			Log.d(TAG, "metaElems:" + metaElems.size());
-			callback.onFinish(mDataList);
+			callback.onFinish(dataList);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -168,15 +165,15 @@ public class HotFragment extends Fragment {
 
 		@Override
 		public int getCount() {
-			if (mDataList == null) {
+			if (dataList == null) {
 				return 0;
 			}
-			return mDataList.size();
+			return dataList.size();
 		}
 
 		@Override
 		public Object getItem(int i) {
-			return mDataList.get(i);
+			return dataList.get(i);
 		}
 
 		@Override
@@ -198,7 +195,7 @@ public class HotFragment extends Fragment {
 			}
 
 
-			holder.textTitle.setText(mDataList.get(i).getTitle());
+			holder.textTitle.setText(dataList.get(i).getTitle());
 
 			return convertView;
 		}
@@ -211,8 +208,8 @@ public class HotFragment extends Fragment {
 	Handler mHandler = new Handler(){
 		@Override
 		public void handleMessage(Message msg) {
-			mAdapterHotEntry = new HotEntryAdapter(getActivity());
-			mListViewHotEntry.setAdapter(mAdapterHotEntry);
+			adapterHotEntry = new HotEntryAdapter(getActivity());
+			listViewHotEntry.setAdapter(adapterHotEntry);
 
 			Intent startIntent = new Intent(getActivity(), GetMetaDataService.class);
 			Bundle bundle = new Bundle();
@@ -220,35 +217,15 @@ public class HotFragment extends Fragment {
 			ArrayList<String> urls = new ArrayList<String>();
 			ArrayList<String> titles = new ArrayList<String>();
 
-			for (int i=0;i<mDataList.size();i++){
-				urls.add(mDataList.get(i).getUrl());
-				titles.add(mDataList.get(i).getTitle());
+			for (int i=0;i< dataList.size();i++){
+				urls.add(dataList.get(i).getUrl());
+				titles.add(dataList.get(i).getTitle());
 			}
 			bundle.putStringArrayList("url",urls);
 			bundle.putStringArrayList("titles",titles);
 			startIntent.putExtras(bundle);
 
-			//getActivity().bindService(startIntent, connection, getActivity().BIND_AUTO_CREATE);
-
 			getActivity().startService(startIntent);
 		}
 	};
-
-	private GetMetaDataService.MyBinder myBinder;
-
-	private ServiceConnection connection = new ServiceConnection() {
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-		}
-
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			myBinder = (GetMetaDataService.MyBinder) service;
-			ArrayList data = myBinder.getData();
-
-			Log.d(TAG,"------------------------data:"+data.size()+"-----------------------------");
-		}
-	};
-
 }

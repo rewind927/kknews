@@ -32,12 +32,12 @@ public class MyActivity extends FragmentActivity {
 
 	private int currentFragment = HOT_FRAGMENT_TAG;
 
-	private String[] mPlanetTitles = {"嚴選專欄", "個人精選", "設定"};
+	private String[] planetTitles;
 
 	//drawer
-	private DrawerLayout mDrawerLayout;
-	private ListView mDrawerList;
-	private ActionBarDrawerToggle mDrawerToggle;
+	private DrawerLayout drawerLayout;
+	private ListView drawerList;
+	private ActionBarDrawerToggle drawerToggle;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -47,12 +47,12 @@ public class MyActivity extends FragmentActivity {
 		getActionBar().setHomeButtonEnabled(true);
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 
-		mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-		mDrawerList = (ListView) findViewById(R.id.left_drawer);
+		drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		drawerList = (ListView) findViewById(R.id.left_drawer);
 
-		mDrawerToggle = new ActionBarDrawerToggle(
+		drawerToggle = new ActionBarDrawerToggle(
 				this,                  /* host Activity */
-				mDrawerLayout,         /* DrawerLayout object */
+				drawerLayout,         /* DrawerLayout object */
 				R.drawable.ic_navigation_drawer,  /* nav drawer icon to replace 'Up' caret */
 				R.string.hot,  /* "open drawer" description */
 				R.string.setting  /* "close drawer" description */
@@ -65,10 +65,11 @@ public class MyActivity extends FragmentActivity {
 				super.onDrawerOpened(drawerView);
 			}
 		};
-		mDrawerLayout.setDrawerListener(mDrawerToggle);
-		mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-				R.layout.drawer_list_item, mPlanetTitles));
-		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+		planetTitles = getResources().getStringArray(R.array.panel_titles);
+		drawerLayout.setDrawerListener(drawerToggle);
+		drawerList.setAdapter(new ArrayAdapter<String>(this,
+				R.layout.drawer_list_item, planetTitles));
+		drawerList.setOnItemClickListener(new DrawerItemClickListener());
 
 		initHotFragment();
 	}
@@ -90,7 +91,7 @@ public class MyActivity extends FragmentActivity {
 					fm.popBackStack();
 					setDrawerIndicatorEnable(true);
 				} else {
-					if (mDrawerToggle.onOptionsItemSelected(item)) {
+					if (drawerToggle.onOptionsItemSelected(item)) {
 						return false;
 					}
 				}
@@ -119,12 +120,13 @@ public class MyActivity extends FragmentActivity {
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
-		mDrawerToggle.syncState();
+		drawerToggle.syncState();
 	}
+
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
-		mDrawerToggle.onConfigurationChanged(newConfig);
+		drawerToggle.onConfigurationChanged(newConfig);
 	}
 
 	private void showExitDialog() {
@@ -164,7 +166,7 @@ public class MyActivity extends FragmentActivity {
 
 	private void selectItem(int position) {
 		if (currentFragment == position) {
-			mDrawerLayout.closeDrawer(mDrawerList);
+			drawerLayout.closeDrawer(drawerList);
 			return;
 		}
 
@@ -191,8 +193,8 @@ public class MyActivity extends FragmentActivity {
 				.replace(R.id.content_frame, fragment)
 				.commit();
 
-		mDrawerList.setItemChecked(position, true);
-		mDrawerLayout.closeDrawer(mDrawerList);
+		drawerList.setItemChecked(position, true);
+		drawerLayout.closeDrawer(drawerList);
 	}
 
 	private void initHotFragment() {
@@ -203,8 +205,8 @@ public class MyActivity extends FragmentActivity {
 				.commit();
 	}
 
-	public void setDrawerIndicatorEnable(boolean enable){
-		mDrawerToggle.setDrawerIndicatorEnabled(enable);
+	public void setDrawerIndicatorEnable(boolean enable) {
+		drawerToggle.setDrawerIndicatorEnabled(enable);
 	}
 
 }

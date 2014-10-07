@@ -34,20 +34,20 @@ public class EditDialogFragment extends DialogFragment {
 	public static final int ADD_MODE = 1;
 	public static final int NEW_MODE = 2;
 
-	private Button mButtonCancel;
-	private Button mButtonOk;
-	private EditText mTextInputFileName;
+	private Button buttonCancel;
+	private Button buttonOk;
+	private EditText textInputFileName;
 	private DialogClickListener callback;
-	private TextView mTextInputTitle;
-	private TextView mTextFileTitle;
+	private TextView textInputTitle;
+	private TextView textFileTitle;
 
-	private GridView mGridCategoryImg;
-	private CategoryAdapter mCategoryAdapter;
+	private GridView gridCategoryImg;
+	private CategoryAdapter categoryAdapter;
 
-	private ArrayList<String> mThumbDataList;
-	private ArrayList<String> mCategoryTitleDataList;
+	private ArrayList<String> thumbDataList;
+	private ArrayList<String> categoryTitleDataList;
 
-	private int mType = EDIT_MODE;
+	private int type = EDIT_MODE;
 
 	static EditDialogFragment newInstance(int type, String editText, ArrayList<String> dataList) {
 		EditDialogFragment fragment = new EditDialogFragment();
@@ -81,34 +81,34 @@ public class EditDialogFragment extends DialogFragment {
 
 		View v = inflater.inflate(R.layout.layout_edit_file_dialog, container, false);
 
-		mTextInputFileName = (EditText) v.findViewById(R.id.text_input_file_name);
-		mTextInputFileName.setText(getArguments().getString(Def.PASS_EDIT_TEXT_KEY));
+		textInputFileName = (EditText) v.findViewById(R.id.text_input_file_name);
+		textInputFileName.setText(getArguments().getString(Def.PASS_EDIT_TEXT_KEY));
 
-		mThumbDataList = getArguments().getStringArrayList(Def.PASS_THUMB_NAME_KEY);
-		mCategoryTitleDataList = getArguments().getStringArrayList(Def.PASS_CATEGORY_TITLE_KEY);
+		thumbDataList = getArguments().getStringArrayList(Def.PASS_THUMB_NAME_KEY);
+		categoryTitleDataList = getArguments().getStringArrayList(Def.PASS_CATEGORY_TITLE_KEY);
 
-		mTextInputTitle = (TextView) v.findViewById(R.id.text_input_title);
-		mTextFileTitle = (TextView) v.findViewById(R.id.text_change_img_title);
+		textInputTitle = (TextView) v.findViewById(R.id.text_input_title);
+		textFileTitle = (TextView) v.findViewById(R.id.text_change_img_title);
 
-		mType = getArguments().getInt(Def.PASS_DIALOG_TYPE);
+		type = getArguments().getInt(Def.PASS_DIALOG_TYPE);
 
-		mCategoryAdapter = new CategoryAdapter(getActivity());
-		mGridCategoryImg = (GridView) v.findViewById(R.id.gridview_show_category_img);
-		mGridCategoryImg.setAdapter(mCategoryAdapter);
-		mGridCategoryImg.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		categoryAdapter = new CategoryAdapter(getActivity());
+		gridCategoryImg = (GridView) v.findViewById(R.id.gridview_show_category_img);
+		gridCategoryImg.setAdapter(categoryAdapter);
+		gridCategoryImg.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				if (mCategoryAdapter.selectedId == position) {
-					mCategoryAdapter.selectedId = -1;
+				if (categoryAdapter.selectedId == position) {
+					categoryAdapter.selectedId = -1;
 				} else {
-					mCategoryAdapter.selectedId = position;
+					categoryAdapter.selectedId = position;
 				}
-				mCategoryAdapter.notifyDataSetChanged();
+				categoryAdapter.notifyDataSetChanged();
 			}
 		});
 
-		mButtonCancel = (Button) v.findViewById(R.id.button_cancel);
-		mButtonCancel.setOnClickListener(new View.OnClickListener() {
+		buttonCancel = (Button) v.findViewById(R.id.button_cancel);
+		buttonCancel.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				callback.onCancelClick();
@@ -116,12 +116,12 @@ public class EditDialogFragment extends DialogFragment {
 			}
 		});
 
-		mButtonOk = (Button) v.findViewById(R.id.button_ok);
-		mButtonOk.setOnClickListener(new View.OnClickListener() {
+		buttonOk = (Button) v.findViewById(R.id.button_ok);
+		buttonOk.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (mType == NEW_MODE) {
-					if (mCategoryAdapter.selectedId == -1) {
+				if (type == NEW_MODE) {
+					if (categoryAdapter.selectedId == -1) {
 						Toast.makeText(getActivity(), getString(R.string.please_select_img), Toast.LENGTH_SHORT).show();
 						return;
 					}
@@ -141,25 +141,25 @@ public class EditDialogFragment extends DialogFragment {
 	}
 
 	public String getFileName() {
-		return mTextInputFileName.getText().toString();
+		return textInputFileName.getText().toString();
 	}
 
 	public String getSelectFileName() {
-		if (mCategoryAdapter.selectedId == -1) {
-			return mTextInputFileName.getText().toString();
+		if (categoryAdapter.selectedId == -1) {
+			return textInputFileName.getText().toString();
 		}
-		return mCategoryTitleDataList.get(mCategoryAdapter.selectedId);
+		return categoryTitleDataList.get(categoryAdapter.selectedId);
 	}
 
 	public void setDataList(ArrayList<String> dataList) {
-		this.mThumbDataList = dataList;
+		this.thumbDataList = dataList;
 	}
 
 	public String getThumbName() {
-		if (mCategoryAdapter.selectedId == -1) {
+		if (categoryAdapter.selectedId == -1) {
 			return null;
 		}
-		return mThumbDataList.get(mCategoryAdapter.selectedId);
+		return thumbDataList.get(categoryAdapter.selectedId);
 	}
 
 	class CategoryAdapter extends BaseAdapter {
@@ -173,8 +173,8 @@ public class EditDialogFragment extends DialogFragment {
 
 		@Override
 		public int getCount() {
-			if (mThumbDataList != null) {
-				return mThumbDataList.size();
+			if (thumbDataList != null) {
+				return thumbDataList.size();
 			}
 			return 0;
 		}
@@ -197,7 +197,7 @@ public class EditDialogFragment extends DialogFragment {
 				holder = new ViewHolder();
 				convertView = inflater.inflate(R.layout.layout_category_item, null);
 				holder.textTitle = (TextView) convertView.findViewById(R.id.text_category_name);
-				if (mCategoryTitleDataList == null) {
+				if (categoryTitleDataList == null) {
 					holder.textTitle.setVisibility(View.GONE);
 				}
 
@@ -207,12 +207,12 @@ public class EditDialogFragment extends DialogFragment {
 				holder = (ViewHolder) convertView.getTag();
 			}
 
-			if (mCategoryTitleDataList != null) {
-				holder.textTitle.setText(mCategoryTitleDataList.get(position));
+			if (categoryTitleDataList != null) {
+				holder.textTitle.setText(categoryTitleDataList.get(position));
 			}
 
-			if (mThumbDataList != null) {
-				Bitmap bitmap = Utils.getBitmapFromInternal(getActivity(), mThumbDataList.get(position));
+			if (thumbDataList != null) {
+				Bitmap bitmap = Utils.getBitmapFromInternal(getActivity(), thumbDataList.get(position));
 				if (bitmap != null) {
 					holder.imageThumb.setImageBitmap(bitmap);
 				}
@@ -241,21 +241,21 @@ public class EditDialogFragment extends DialogFragment {
 		int fileTitleId = R.string.edit_favorite_file_image_name_title;
 		int okId = R.string.edit;
 
-		if (mType == ADD_MODE) {
+		if (type == ADD_MODE) {
 			titleId = R.string.add_to_favorite;
 			inputTitleId = R.string.add_to_favorite;
 			fileTitleId = R.string.choose_file_title;
 			okId = R.string.add;
-		} else if (mType == NEW_MODE) {
+		} else if (type == NEW_MODE) {
 			titleId = R.string.new_file_in_favorite;
 			inputTitleId = R.string.new_file_hint;
 			fileTitleId = R.string.choose_file_img;
 			okId = R.string.new_file;
 		}
 		getDialog().setTitle(titleId);
-		mTextInputTitle.setText(inputTitleId);
-		mTextFileTitle.setText(fileTitleId);
-		mButtonOk.setText(okId);
+		textInputTitle.setText(inputTitleId);
+		textFileTitle.setText(fileTitleId);
+		buttonOk.setText(okId);
 
 	}
 }

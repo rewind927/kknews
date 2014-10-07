@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -35,29 +34,27 @@ public class GetMetaDataService extends Service {
 
 	private static final String TAG = "GetMetaDataService";
 
-	private MyBinder mBinder = new MyBinder();
+	private ArrayList<String> rssUrls;
+	private ArrayList<String> sectionName;
 
-	private ArrayList<String> mRssUrls;
-	private ArrayList<String> mSectionName;
-
-	private ArrayList<ArrayList<ContentDataObject>> mDataList;
+	private ArrayList<ArrayList<ContentDataObject>> dataList;
 
 	//db
-	private NewsContentDBHelper mDbHelper;
-	private SQLiteDatabase mDB;
+	private NewsContentDBHelper dbHelper;
+	private SQLiteDatabase db;
 
 	//thread
-	private Thread mThread;
-	private UpdateRunnable mRunnable;
+	private Thread thread;
+	private UpdateRunnable runnable;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
-		mDbHelper = new NewsContentDBHelper(getApplicationContext());
-		mDB = mDbHelper.getWritableDatabase();
+		dbHelper = new NewsContentDBHelper(getApplicationContext());
+		db = dbHelper.getWritableDatabase();
 
-		mDataList = new ArrayList<ArrayList<ContentDataObject>>();
+		dataList = new ArrayList<ArrayList<ContentDataObject>>();
 
 		Log.d(TAG, "onCreate() executed");
 	}
@@ -68,20 +65,25 @@ public class GetMetaDataService extends Service {
 		if (intent == null) {
 			return START_STICKY_COMPATIBILITY;
 		}
-		if (mRssUrls == null) {
-			mRssUrls = intent.getStringArrayListExtra("url");
+		if (rssUrls == null) {
+			rssUrls = intent.getStringArrayListExtra("url");
 		}
-		if (mSectionName == null) {
-			mSectionName = intent.getStringArrayListExtra("titles");
+		if (sectionName == null) {
+			sectionName = intent.getStringArrayListExtra("titles");
 		}
 
-		mRunnable = new UpdateRunnable();
-		mThread = new Thread(mRunnable);
-		if (!mThread.isAlive()) {
-			mThread.start();
+		runnable = new UpdateRunnable();
+		thread = new Thread(runnable);
+		if (!thread.isAlive()) {
+			thread.start();
 		}
 
 		return super.onStartCommand(intent, flags, startId);
+	}
+
+	@Override
+	public IBinder onBind(Intent intent) {
+		return null;
 	}
 
 	@Override
@@ -89,24 +91,24 @@ public class GetMetaDataService extends Service {
 		super.onDestroy();
 		Log.d(TAG, "onDestroy() executed");
 
-		if (mThread.isAlive()) {
-			mThread.interrupt();
+		if (thread.isAlive()) {
+			thread.interrupt();
 		}
 
-		if (mDbHelper != null) {
-			mDbHelper.close();
+		if (dbHelper != null) {
+			dbHelper.close();
 		}
-		if (mDB != null) {
-			mDB.close();
+		if (db != null) {
+			db.close();
 		}
-		if (mDataList != null) {
-			mDataList.clear();
+		if (dataList != null) {
+			dataList.clear();
 		}
-		if (mRssUrls != null) {
-			mRssUrls.clear();
+		if (rssUrls != null) {
+			rssUrls.clear();
 		}
-		if (mSectionName != null) {
-			mSectionName.clear();
+		if (sectionName != null) {
+			sectionName.clear();
 		}
 
 	}
@@ -114,18 +116,6 @@ public class GetMetaDataService extends Service {
 	@Override
 	public boolean onUnbind(Intent intent) {
 		return super.onUnbind(intent);
-	}
-
-	@Override
-	public IBinder onBind(Intent intent) {
-		return mBinder;
-	}
-
-	public class MyBinder extends Binder {
-
-		public ArrayList<ArrayList<ContentDataObject>> getData() {
-			return mDataList;
-		}
 	}
 
 	private ArrayList<ContentDataObject> getXml(String url) {
@@ -199,17 +189,17 @@ public class GetMetaDataService extends Service {
 	}
 
 	private void insertContentData() {
-		for (int i = 0; i < mDataList.size(); i++) {
+		for (int i = 0; i < dataList.size(); i++) {
 			Log.d(TAG, "i:" + i);
-			if (isDataInKknewsTable(mDataList.get(i).get(0).getTitle())) {
+			if (isDataInKknewsTable(dataList.get(i).get(0).getTitle())) {
 				continue;
 			} else {
-				deleteContentInCategory(mSectionName.get(i));
+				deleteContentInCategory(sectionName.get(i));
 			}
-			for (int j = 0; j < mDataList.get(i).size(); j++) {
-				ContentDataObject data = mDataList.get(i).get(j);
+			for (int j = 0; j < dataList.get(i).size(); j++) {
+				ContentDataObject data = dataList.get(i).get(j);
 				ContentValues value = new ContentValues();
-				value.put(NewsContentDBHelper.COLUMN_FILE, mSectionName.get(i));
+				value.put(NewsContentDBHelper.COLUMN_FILE, sectionName.get(i));
 				value.put(NewsContentDBHelper.COLUMN_CATEGORY, data.getCategory());
 				value.put(NewsContentDBHelper.COLUMN_DATE, data.getDate());
 				value.put(NewsContentDBHelper.COLUMN_DESCRIPTION, data.getDescription());
@@ -217,25 +207,25 @@ public class GetMetaDataService extends Service {
 				value.put(NewsContentDBHelper.COLUMN_URL, data.getLink());
 				value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, data.getImgUrl());
 				Log.d(TAG, "insert:" + data.getTitle());
-				mDB.insert(NewsContentDBHelper.TABLE_KKEWNS_CONTENT, null, value);
+				db.insert(NewsContentDBHelper.TABLE_KKEWNS_CONTENT, null, value);
 			}
 		}
 	}
 
 	private void insertContentData(int position) {
-		if (mDataList == null || mDataList.size() == 0) {
+		if (dataList == null || dataList.size() == 0) {
 			return;
 		}
-		if (isDataInKknewsTable(mDataList.get(position).get(0).getTitle())) {
+		if (isDataInKknewsTable(dataList.get(position).get(0).getTitle())) {
 			return;
 		} else {
-			deleteContentInCategory(mSectionName.get(position));
+			deleteContentInCategory(sectionName.get(position));
 		}
-		mDB.beginTransaction();
-		for (int j = 0; j < mDataList.get(position).size(); j++) {
-			ContentDataObject data = mDataList.get(position).get(j);
+		db.beginTransaction();
+		for (int j = 0; j < dataList.get(position).size(); j++) {
+			ContentDataObject data = dataList.get(position).get(j);
 			ContentValues value = new ContentValues();
-			value.put(NewsContentDBHelper.COLUMN_FILE, mSectionName.get(position));
+			value.put(NewsContentDBHelper.COLUMN_FILE, sectionName.get(position));
 			value.put(NewsContentDBHelper.COLUMN_CATEGORY, data.getCategory());
 			value.put(NewsContentDBHelper.COLUMN_DATE, data.getDate());
 			value.put(NewsContentDBHelper.COLUMN_DESCRIPTION, data.getDescription());
@@ -243,11 +233,11 @@ public class GetMetaDataService extends Service {
 			value.put(NewsContentDBHelper.COLUMN_URL, data.getLink());
 			value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, data.getImgUrl());
 			Log.d(TAG, "insert:" + data.getTitle());
-			mDB.insert(NewsContentDBHelper.TABLE_KKEWNS_CONTENT, null, value);
+			db.insert(NewsContentDBHelper.TABLE_KKEWNS_CONTENT, null, value);
 		}
-		mDB.setTransactionSuccessful();
-		mDB.endTransaction();
-		sendUIRefresh(mSectionName.get(position));
+		db.setTransactionSuccessful();
+		db.endTransaction();
+		sendUIRefresh(sectionName.get(position));
 	}
 
 	private void sendUIRefresh(String title) {
@@ -260,11 +250,11 @@ public class GetMetaDataService extends Service {
 	}
 
 	private void deleteContentInCategory(String category) {
-		mDB.delete(NewsContentDBHelper.TABLE_KKEWNS_CONTENT, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + category + "'", null);
+		db.delete(NewsContentDBHelper.TABLE_KKEWNS_CONTENT, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + category + "'", null);
 	}
 
 	private boolean isDataInKknewsTable(String title) {
-		Cursor cursor = mDB.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_FILE + " FROM " + NewsContentDBHelper.TABLE_KKEWNS_CONTENT +
+		Cursor cursor = db.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_FILE + " FROM " + NewsContentDBHelper.TABLE_KKEWNS_CONTENT +
 				"" +
 				" " +
 				"WHERE " + NewsContentDBHelper.COLUMN_TITLE + " = '" + title + "'", null);
@@ -300,15 +290,15 @@ public class GetMetaDataService extends Service {
 
 		private void getData() {
 			long a = System.currentTimeMillis();
-			for (int i = 0; i < mRssUrls.size(); i++) {
-				mDataList.add(getXml(mRssUrls.get(i)));
+			for (int i = 0; i < rssUrls.size(); i++) {
+				dataList.add(getXml(rssUrls.get(i)));
 				insertContentData(i);
 			}
 			long b = System.currentTimeMillis();
 			Log.d(TAG, "time:" + (b - a));
-			for (int i = 0; i < mRssUrls.size(); i++) {
-				for (int j = 0; j < mDataList.get(i).size(); j++) {
-					downloadImage(mDataList.get(i).get(j).getImgUrl());
+			for (int i = 0; i < rssUrls.size(); i++) {
+				for (int j = 0; j < dataList.get(i).size(); j++) {
+					downloadImage(dataList.get(i).get(j).getImgUrl());
 				}
 			}
 		}
