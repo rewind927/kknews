@@ -1,12 +1,10 @@
 package com.kknews.fragment;
 
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -128,7 +126,6 @@ public class PersonalFragment extends Fragment {
 
 		dbHelper = new NewsContentDBHelper(getActivity());
 		db = dbHelper.getWritableDatabase();
-		getCategoryCursorFromDB();
 
 		updateUiReceiver = new UpdateUIReceiver();
 
@@ -144,7 +141,7 @@ public class PersonalFragment extends Fragment {
 		filter.addAction(Def.ACTION_REFRESH_UI);
 		getActivity().registerReceiver(updateUiReceiver, filter);
 
-		parseData(getCategoryCursorFromDB());
+		parseData(dbHelper.getCategoryCursorFromDB(db));
 		cateGoryAdapter.notifyDataSetChanged();
 	}
 
@@ -288,7 +285,7 @@ public class PersonalFragment extends Fragment {
 						for (int i = 0; i < listSize; i++) {
 							if (checkItemList.get(i)) {
 								Log.d(TAG, i + ":check ok");
-								deleteCategory(dataList.get(i).getCategory());
+								dbHelper.deleteFavoriteCategory(db, dataList.get(i).getCategory());
 							}
 						}
 					}
@@ -307,21 +304,7 @@ public class PersonalFragment extends Fragment {
 	};
 
 	public void updateData() {
-		parseData(getCategoryCursorFromDB());
-	}
-
-	private Cursor getCategoryCursorFromDB() {
-		if (db == null) {
-			return null;
-		}
-		Cursor cursor = db.rawQuery(NewsContentDBHelper.SQL_SELECT_CATEGORY_DATA, null);
-		cursor.moveToFirst();
-		while (!cursor.isAfterLast()) {
-			Log.d(TAG, "category:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_FILE)));
-			Log.d(TAG, "thumbnail:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
-			cursor.moveToNext();
-		}
-		return cursor;
+		parseData(dbHelper.getCategoryCursorFromDB(db));
 	}
 
 	private void parseData(Cursor cursor) {
@@ -349,45 +332,6 @@ public class PersonalFragment extends Fragment {
 		}
 	}
 
-	private Cursor getCategoryContentCursorFromDB(String title) {
-		Cursor cursor = db.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_THUMBNAIL + " FROM " + NewsContentDBHelper.TABLE_CONTENT + "" +
-				" " +
-				"WHERE " + NewsContentDBHelper.COLUMN_FILE + " = '" + title + "'", null);
-		cursor.moveToFirst();
-		while (!cursor.isAfterLast()) {
-			Log.d(TAG, "thumbnail:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
-			cursor.moveToNext();
-		}
-		return cursor;
-	}
-
-	private Cursor getContentCursorFromDB() {
-		Cursor cursor = db.rawQuery("SELECT " + NewsContentDBHelper.COLUMN_THUMBNAIL + " FROM " + NewsContentDBHelper
-				.TABLE_KKEWNS_CONTENT + "" +
-				" ;", null);
-		cursor.moveToFirst();
-		while (!cursor.isAfterLast()) {
-			Log.d(TAG, "thumbnail:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
-			cursor.moveToNext();
-		}
-		return cursor;
-	}
-
-	private ArrayList<String> parseThumbList(Cursor cursor, boolean encode) {
-		ArrayList<String> imageList = new ArrayList<String>();
-		cursor.moveToFirst();
-		while (!cursor.isAfterLast()) {
-			String thumbName = cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL));
-			if (encode) {
-				thumbName = Utils.encodeBase64(thumbName);
-			}
-			imageList.add(thumbName);
-			cursor.moveToNext();
-		}
-
-		return imageList;
-	}
-
 	private void showAddFileDialog() {
 		FragmentTransaction ft = getFragmentManager().beginTransaction();
 		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
@@ -396,7 +340,7 @@ public class PersonalFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		ArrayList<String> imageList = parseThumbList(getContentCursorFromDB(), true);
+		ArrayList<String> imageList = dbHelper.parseCategoryThumbList(dbHelper.getContentCursorFromDB(db), true);
 		final EditDialogFragment newFragment = EditDialogFragment.newInstance(EditDialogFragment.NEW_MODE, "", imageList);
 
 		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
@@ -412,7 +356,7 @@ public class PersonalFragment extends Fragment {
 				if (fileName == null || fileName.equals("")) {
 					return;
 				}
-				insertCategoryData(fileName, newFragment.getThumbName());
+				dbHelper.insertCategoryData(db, fileName, newFragment.getThumbName());
 				updateData();
 				cateGoryAdapter.notifyDataSetChanged();
 
@@ -429,8 +373,8 @@ public class PersonalFragment extends Fragment {
 		}
 		ft.addToBackStack(null);
 
-		ArrayList<String> imageList = parseThumbList(getCategoryContentCursorFromDB(title), false);
-		final EditDialogFragment newFragment = EditDialogFragment.newInstance(EditDialogFragment.EDIT_MODE,title, imageList);
+		ArrayList<String> imageList = dbHelper.parseCategoryThumbList(dbHelper.getCategoryContentCursorFromDB(db, title), false);
+		final EditDialogFragment newFragment = EditDialogFragment.newInstance(EditDialogFragment.EDIT_MODE, title, imageList);
 
 		newFragment.show(this.getActivity().getFragmentManager(), "dialog");
 		newFragment.setCallBack(new DialogClickListener() {
@@ -441,61 +385,11 @@ public class PersonalFragment extends Fragment {
 
 			@Override
 			public void onOkClick() {
-				updateCategoryThumb(title, newFragment.getFileName(), newFragment.getThumbName());
+				dbHelper.updateCategoryThumb(db, title, newFragment.getFileName(), newFragment.getThumbName());
 				updateData();
 				cateGoryAdapter.notifyDataSetChanged();
-
 			}
 		});
-	}
-
-	private void updateCategoryThumb(String originalTitle, String replaceTitle, String thumbName) {
-		Log.d(TAG, "originalTitle:" + originalTitle + ",replaceTitle:" + replaceTitle + ",thumbName:" + thumbName);
-
-		//update content
-		updateContentCategory(originalTitle, replaceTitle);
-
-		//update category
-		ContentValues values = new ContentValues();
-		if (thumbName != null) {
-			values.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbName);
-		}
-		values.put(NewsContentDBHelper.COLUMN_FILE, replaceTitle);
-		try {
-			db.update(NewsContentDBHelper.TABLE_CATEGORY, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'",
-					null);
-		} catch (SQLiteConstraintException exception) {
-			deleteCategory(originalTitle);
-		}
-	}
-
-	private void updateContentCategory(String originalTitle, String replaceTitle) {
-		ContentValues values = new ContentValues();
-		values.put(NewsContentDBHelper.COLUMN_FILE, replaceTitle);
-		try {
-			db.update(NewsContentDBHelper.TABLE_CONTENT, values, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + originalTitle + "'",
-					null);
-		} catch (SQLiteConstraintException exception) {
-			//deleteContent();
-		}
-	}
-
-	private void deleteCategory(String category) {
-		Log.d(TAG, "delete:" + category);
-		deleteContent(category);
-
-		db.delete(NewsContentDBHelper.TABLE_CATEGORY, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + category + "'", null);
-	}
-
-	private void deleteContent(String category) {
-		db.delete(NewsContentDBHelper.TABLE_CONTENT, NewsContentDBHelper.COLUMN_FILE + " = " + "'" + category + "'", null);
-	}
-
-	private void insertCategoryData(String fileName, String thumbFileName) {
-		ContentValues value = new ContentValues();
-		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
-		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbFileName);
-		db.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
 	}
 
 	class UpdateUIReceiver extends BroadcastReceiver {
@@ -503,7 +397,7 @@ public class PersonalFragment extends Fragment {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 
-			parseData(getCategoryCursorFromDB());
+			parseData(dbHelper.getCategoryCursorFromDB(db));
 			cateGoryAdapter.notifyDataSetChanged();
 
 		}

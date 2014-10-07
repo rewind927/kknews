@@ -2,7 +2,6 @@ package com.kknews.fragment;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -95,7 +94,7 @@ public class PersonalContentFragment extends Fragment {
 
 		setHasOptionsMenu(true);
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
-		((MyActivity)getActivity()).setDrawerIndicatorEnable(false);
+		((MyActivity) getActivity()).setDrawerIndicatorEnable(false);
 
 		layoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
 		buttonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);
@@ -154,7 +153,7 @@ public class PersonalContentFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 
-		parseData(getDataCursorFromDB());
+		parseData(dbHelper.getContentDataCursorFromDB(db, title));
 	}
 
 	@Override
@@ -314,17 +313,6 @@ public class PersonalContentFragment extends Fragment {
 		}
 	}
 
-	private Cursor getDataCursorFromDB() {
-		Cursor cursor = db.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_CONTENT + " WHERE " + NewsContentDBHelper.COLUMN_FILE +
-				" = '" + title + "'", null);
-		cursor.moveToFirst();
-		while (!cursor.isAfterLast()) {
-			Log.d(TAG, "title:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_TITLE)));
-			cursor.moveToNext();
-		}
-		return cursor;
-	}
-
 	private View.OnClickListener mClickMultiSelectListener = new View.OnClickListener() {
 		@Override
 		public void onClick(View v) {
@@ -368,7 +356,7 @@ public class PersonalContentFragment extends Fragment {
 			public void onClick(DialogInterface dialog, int which) {
 				layoutMultiSelectButtonGroup.setVisibility(View.GONE);
 				deleteSelectContent(checkList);
-				parseData(getDataCursorFromDB());
+				parseData(dbHelper.getContentDataCursorFromDB(db, title));
 				hotEntryAdapter.notifyDataSetChanged();
 				checkList.clear();
 			}
@@ -411,8 +399,8 @@ public class PersonalContentFragment extends Fragment {
 
 			@Override
 			public void onOkClick() {
-				insertContentData(position, newFragment.getSelectFileName());
-				insertCategoryData(newFragment.getSelectFileName(), dataList.get(position).getImgUrl());
+				dbHelper.insertContentData(dataList, db, position, newFragment.getSelectFileName());
+				dbHelper.insertCategoryData(db, newFragment.getSelectFileName(), dataList.get(position).getImgUrl());
 
 				sendCategoryUIRefresh();
 			}
@@ -452,11 +440,11 @@ public class PersonalContentFragment extends Fragment {
 					if (checkItemList.get(i)) {
 						lastCheckPosition = i;
 						Log.d(TAG, i + ":check ok");
-						insertContentData(i, newFragment.getSelectFileName());
+						dbHelper.insertContentDataNoEncode(dataList, db, i, newFragment.getSelectFileName());
 					}
 				}
 
-				insertCategoryData(newFragment.getSelectFileName(), dataList.get(lastCheckPosition).getImgUrl());
+				dbHelper.insertCategoryData(db, newFragment.getSelectFileName(), dataList.get(lastCheckPosition).getImgUrl());
 
 				sendCategoryUIRefresh();
 
@@ -467,27 +455,7 @@ public class PersonalContentFragment extends Fragment {
 		});
 	}
 
-	private void insertCategoryData(String fileName, String thumbFileName) {
-		ContentValues value = new ContentValues();
-		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
-		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbFileName);
-		db.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
-	}
-
-	private void insertContentData(int position, String fileName) {
-		ContentDataObject data = dataList.get(position);
-		ContentValues value = new ContentValues();
-		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
-		value.put(NewsContentDBHelper.COLUMN_CATEGORY, data.getCategory());
-		value.put(NewsContentDBHelper.COLUMN_DATE, data.getDate());
-		value.put(NewsContentDBHelper.COLUMN_DESCRIPTION, data.getDescription());
-		value.put(NewsContentDBHelper.COLUMN_TITLE, data.getTitle());
-		value.put(NewsContentDBHelper.COLUMN_URL, data.getLink());
-		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, data.getImgUrl());
-		db.insert(NewsContentDBHelper.TABLE_CONTENT, null, value);
-	}
-
-	private void sendCategoryUIRefresh( ) {
+	private void sendCategoryUIRefresh() {
 		Intent intent = new Intent();
 		intent.setAction(Def.ACTION_REFRESH_UI);
 		getActivity().sendBroadcast(intent);

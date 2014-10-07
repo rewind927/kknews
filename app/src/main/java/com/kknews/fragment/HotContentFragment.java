@@ -1,8 +1,6 @@
 package com.kknews.fragment;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -13,8 +11,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.text.Html;
@@ -34,7 +30,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.ryanwang.helloworld.R;
 import com.kknews.activity.MyActivity;
@@ -43,11 +38,6 @@ import com.kknews.data.ContentDataObject;
 import com.kknews.database.NewsContentDBHelper;
 import com.kknews.util.Def;
 import com.kknews.util.Utils;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,7 +80,7 @@ public class HotContentFragment extends Fragment {
 		textHotTitle.setText(title);
 
 		getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
-		((MyActivity)getActivity()).setDrawerIndicatorEnable(false);
+		((MyActivity) getActivity()).setDrawerIndicatorEnable(false);
 
 		layoutMultiSelectButtonGroup = (LinearLayout) view.findViewById(R.id.ll_multi_select_button_group);
 		buttonMultiSelectOk = (Button) view.findViewById(R.id.button_multi_select_ok);
@@ -150,7 +140,7 @@ public class HotContentFragment extends Fragment {
 	@Override
 	public void onStart() {
 		super.onStart();
-		dataList = parseData(getDataCursorFormDB(title));
+		dataList = dbHelper.parseKknewsContentData(dbHelper.getDataCursorFormDB(db, title));
 		adapterHotEntry = new HotEntryAdapter(getActivity());
 		listViewHotContent.setAdapter(adapterHotEntry);
 	}
@@ -179,20 +169,12 @@ public class HotContentFragment extends Fragment {
 	}
 
 	@Override
-	public void onAttach(Activity activity) {
-		super.onAttach(activity);
-	}
-
-	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
 		setHasOptionsMenu(true);
 
 		dbHelper = new NewsContentDBHelper(getActivity());
 		db = dbHelper.getWritableDatabase();
-
-		Bundle bundle = this.getArguments();
-		final String dataUrl = bundle.getString(Def.PASS_URL_KEY, null);
 
 		updateUiReceiver = new UpdateUIReceiver();
 
@@ -223,94 +205,6 @@ public class HotContentFragment extends Fragment {
 				break;
 		}
 		return true;
-	}
-
-	private Cursor getDataCursorFormDB(String title) {
-		return db.rawQuery("SELECT * FROM " + NewsContentDBHelper.TABLE_KKEWNS_CONTENT + " WHERE " + NewsContentDBHelper.COLUMN_FILE +
-				"" +
-				" " +
-				"= " + "'" + title + "' ORDER BY " + NewsContentDBHelper.COLUMN_ID + ";", null);
-	}
-
-	private ArrayList parseData(Cursor cursor) {
-		if (cursor == null) {
-			return null;
-		}
-		ArrayList<ContentDataObject> dataList = null;
-		dataList = new ArrayList<ContentDataObject>();
-		cursor.moveToFirst();
-
-		while (!cursor.isAfterLast()) {
-			ContentDataObject data = new ContentDataObject();
-			data.setTitle(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_TITLE)));
-			data.setCategory(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_CATEGORY)));
-			data.setDate(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_DATE)));
-			data.setLink(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_URL)));
-			data.setImgUrl(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
-			data.setDescription(cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_DESCRIPTION)));
-
-			Log.d(TAG, "category:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_FILE)));
-			Log.d(TAG, "thumbnail:" + cursor.getString(cursor.getColumnIndex(NewsContentDBHelper.COLUMN_THUMBNAIL)));
-			cursor.moveToNext();
-
-			dataList.add(data);
-		}
-		return dataList;
-	}
-
-	private void getData(String url) {
-		dataList = getXml(url);
-		mHandler.sendEmptyMessage(3);
-	}
-
-	private ArrayList<ContentDataObject> getXml(String url) {
-		ArrayList<ContentDataObject> dataList = null;
-
-		try {
-			Document doc = Jsoup.connect(url).get();
-
-			Elements metaElements = doc.select("item");
-			Log.d(TAG, "metaElements:" + metaElements.size());
-
-			dataList = new ArrayList<ContentDataObject>();
-
-			for (Element el : metaElements) {
-				ContentDataObject data = new ContentDataObject();
-
-				for (Element subEl : el.children()) {
-					if (subEl.tag().toString().equals(Def.HOT_CONTENT_TITLE)) {
-						data.setTitle(subEl.text());
-					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_CATEGORY)) {
-						data.setCategory(subEl.text());
-					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_GUID)) {
-						data.setLink(subEl.text());
-					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_DATE)) {
-						data.setDate(subEl.text());
-					} else if (subEl.tag().toString().equals(Def.HOT_CONTENT_DESCRIPTION)) {
-						String html = subEl.text();
-						Document docDescription = Jsoup.parse(html);
-						Elements elements = docDescription.select("img");
-						data.setImgUrl(elements.get(0).attr("src"));
-						//TODO download high resolution picture
-						//data.setImgUrl(elements.get(0).attr("src").replaceAll("140x140","200x200"));
-						elements = docDescription.select(" 文章內容 ");
-						Log.d(TAG, "elements.get(0).text():" + elements.size() + ",");
-						String tempString = subEl.text();
-						String skipString = "</a>";
-						tempString = tempString.substring(tempString.indexOf(skipString) + skipString.length());
-						data.setDescription(tempString);
-					}
-					Log.d(TAG, subEl.tag() + ":" + subEl.text());
-				}
-				dataList.add(data);
-				Log.d(TAG, "------------------------");
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return dataList;
 	}
 
 	class HotEntryAdapter extends BaseAdapter {
@@ -415,24 +309,6 @@ public class HotContentFragment extends Fragment {
 		}
 	};
 
-	Handler mUIHandler = new Handler() {
-		@Override
-		public void handleMessage(Message msg) {
-			Toast.makeText(getActivity(), "get data", Toast.LENGTH_SHORT).show();
-			adapterHotEntry.notifyDataSetChanged();
-
-		}
-	};
-
-	Handler mHandler = new Handler() {
-		@Override
-		public void handleMessage(Message msg) {
-			adapterHotEntry = new HotEntryAdapter(getActivity());
-			listViewHotContent.setAdapter(adapterHotEntry);
-
-		}
-	};
-
 	private void showMultiInsertDialog(String title, final SparseBooleanArray checkItemList) {
 
 		FragmentTransaction ft = getFragmentManager().beginTransaction();
@@ -467,11 +343,12 @@ public class HotContentFragment extends Fragment {
 					if (checkItemList.get(i)) {
 						lastCheckPosition = i;
 						Log.d(TAG, i + ":check ok");
-						insertContentData(i, newFragment.getSelectFileName());
+						dbHelper.insertContentData(dataList, db, i, newFragment.getSelectFileName());
 					}
 				}
 
-				insertCategoryData(newFragment.getSelectFileName(), Utils.encodeBase64(dataList.get(lastCheckPosition).getImgUrl()));
+				dbHelper.insertCategoryData(db, newFragment.getSelectFileName(), Utils.encodeBase64(dataList.get(lastCheckPosition)
+						.getImgUrl()));
 
 				if (checkItemList != null) {
 					checkItemList.clear();
@@ -507,30 +384,10 @@ public class HotContentFragment extends Fragment {
 
 			@Override
 			public void onOkClick() {
-				insertContentData(position, newFragment.getSelectFileName());
-				insertCategoryData(newFragment.getSelectFileName(), Utils.encodeBase64(dataList.get(position).getImgUrl()));
+				dbHelper.insertContentData(dataList, db, position, newFragment.getSelectFileName());
+				dbHelper.insertCategoryData(db, newFragment.getSelectFileName(), Utils.encodeBase64(dataList.get(position).getImgUrl()));
 			}
 		});
-	}
-
-	private void insertCategoryData(String fileName, String thumbFileName) {
-		ContentValues value = new ContentValues();
-		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
-		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, thumbFileName);
-		db.insert(NewsContentDBHelper.TABLE_CATEGORY, null, value);
-	}
-
-	private void insertContentData(int position, String fileName) {
-		ContentDataObject data = dataList.get(position);
-		ContentValues value = new ContentValues();
-		value.put(NewsContentDBHelper.COLUMN_FILE, fileName);
-		value.put(NewsContentDBHelper.COLUMN_CATEGORY, data.getCategory());
-		value.put(NewsContentDBHelper.COLUMN_DATE, data.getDate());
-		value.put(NewsContentDBHelper.COLUMN_DESCRIPTION, data.getDescription());
-		value.put(NewsContentDBHelper.COLUMN_TITLE, data.getTitle());
-		value.put(NewsContentDBHelper.COLUMN_URL, data.getLink());
-		value.put(NewsContentDBHelper.COLUMN_THUMBNAIL, Utils.encodeBase64(data.getImgUrl()));
-		db.insert(NewsContentDBHelper.TABLE_CONTENT, null, value);
 	}
 
 	class LoadImage extends AsyncTask<Object, Void, Bitmap> {
@@ -593,7 +450,7 @@ public class HotContentFragment extends Fragment {
 		public void onReceive(Context context, Intent intent) {
 			Bundle bundle = intent.getExtras();
 			if (bundle.getString(Def.PASS_TITLE_KEY).equals(title)) {
-				dataList = parseData(getDataCursorFormDB(title));
+				dataList = dbHelper.parseKknewsContentData(dbHelper.getDataCursorFormDB(db, title));
 				adapterHotEntry = new HotEntryAdapter(getActivity());
 				listViewHotContent.setAdapter(adapterHotEntry);
 
